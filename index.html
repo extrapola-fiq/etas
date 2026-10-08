@@ -409,6 +409,23 @@ html{box-sizing:border-box} body{margin:0} [hidden]{display:none!important} img{
     .kplate small{font-size:9px; letter-spacing:0}
   }
 
+  /* nivel 4: lista de vibraciones y cierre */
+  .vib-panel{display:flex; flex-direction:column; gap:10px}
+  .vib{list-style:none; margin:0; padding:0; display:grid; grid-template-columns:repeat(auto-fill,minmax(13ch,1fr)); gap:2px 16px; font-variant-numeric:tabular-nums}
+  .vib li{white-space:pre}
+  .vib span{opacity:.5}
+  .radio{align-self:flex-start; border:1px solid var(--ph); padding:2px 10px; letter-spacing:.05em}
+  .fin{
+    display:flex; flex-direction:column; align-items:center; gap:12px; text-align:center;
+    padding:30px 20px; border-radius:10px;
+    background:radial-gradient(120% 120% at 50% 0%, rgba(236,208,142,.10), rgba(0,0,0,.25) 70%);
+    box-shadow:inset 0 3px 8px rgba(0,0,0,.55), 0 0 0 2px var(--brass-lo);
+  }
+  .fin-k{font-size:11px; letter-spacing:.2em; text-transform:uppercase; color:var(--engrave); opacity:.85}
+  .fin strong{font-family:var(--stencil); font-weight:800; font-size:clamp(30px,6vw,46px); line-height:1; color:var(--brass-hi); letter-spacing:.06em}
+  .fin-coord{margin:0; font-family:"VT323","Courier New",monospace; font-size:clamp(22px,4vw,30px); color:#86ffa4; text-shadow:0 0 8px rgba(134,255,164,.55)}
+  .fin p{margin:0; max-width:46ch; line-height:1.5}
+
   /* placeholder level */
   .wip{
     display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px;
@@ -595,6 +612,36 @@ html{box-sizing:border-box} body{margin:0} [hidden]{display:none!important} img{
              {num:10, r:{M:"L", G:"U", V:"U"}} ]    // beta
     }
   ];
+
+  /* ---------- nivel 4: origen de la vibración (índice = state.m) ----------
+     Receptor en (0,0), antena al norte. 1 unidad del mapa = 1000 km. Mapa: x −20..20, y −10..10.
+     Reglas de la fase 1 (las aplican los jugadores):
+       R1  se descarta todo punto con |x| > 9
+       R2  espejo: si están (x,y) y (−x,−y), se descarta el de y < 0
+       R3  eco: si un punto es 2 o 3 veces otro, se descarta el mayor (4 veces o más: se conserva)
+     Mariposas 1 y 2 verificadas: el resultado no depende del orden de las reglas y las
+     3 circunferencias se cortan en un único punto. */
+  const NIVEL4 = [
+    { // mariposa 1
+      lista:     [[12,3],[0,2],[-14,6],[9,-5],[0,6],[-13,2],[-9,5],[15,-4],[0,8],[-11,-7],[13,-2]],
+      sobreviven:[[0,2],[0,8],[-9,5]],
+      radio: 5,
+      origen: [-4,5],
+      lugar: "Atlántico Norte"
+    },
+    { // mariposa 2
+      lista:     [[-6,2],[9,-1],[-9,1],[14,4],[-6,-8],[10,3],[-12,5],[-3,1],[12,-5],[-13,-9],[11,8]],
+      sobreviven:[[-9,1],[-6,-8],[-3,1]],
+      radio: 5,
+      origen: [-6,-3],
+      lugar: "Misiones, Argentina"
+    }
+    // mariposas 3 a 8: pendientes (mientras tanto se muestra "en construcción")
+  ];
+  /* Clave del facilitador antes de revelar el radio. Vacía = no se pide. Ejemplo: "ORION" */
+  const CLAVE_L4 = "";
+  /* Texto de la pantalla de cierre */
+  const FIN_TEXTO = "La señal venía de ahí. El receptor vuelve a la calma y la consola Relé 70 queda en silencio.";
 
   /* ---------- piezas compartidas ---------- */
   const $ = (tag, cls, html) => { const e=document.createElement(tag); if(cls) e.className=cls; if(html!=null) e.innerHTML=html; return e; };
@@ -1257,15 +1304,262 @@ html{box-sizing:border-box} body{margin:0} [hidden]{display:none!important} img{
       }
     },
     {
-      name: "Nivel 4",
+      name: "Nivel 4 · Origen de la vibración",
       mount(stage){
-        const w = $("div","wip",
-          `<strong>Nivel 4 en construcción</strong>
-           <p>Este módulo todavía no está cableado. Cuando esté listo, aparece acá sin perder el progreso.</p>`);
-        stage.appendChild(w);
-        const readout = makeReadout();
-        stage.appendChild(readout);
-        type(readout.tape, "NIVEL 4 · Esperando instrucciones del laboratorio.");
+        const D = NIVEL4[state.m|0];
+        if(!D){
+          const w = $("div","wip",
+            `<strong>Nivel 4 en construcción</strong>
+             <p>Los datos de este nivel para su mariposa todavía no están cargados. Cuando estén, aparece acá sin perder el progreso.</p>`);
+          stage.appendChild(w);
+          return;
+        }
+        const lv = state.l4 = state.l4 || { booted:false, phase:"puntos", entries:[], log:[], solved:false };
+        if(!Array.isArray(lv.entries)) lv.entries = [];
+        if(!["puntos","clave","origen","fin"].includes(lv.phase)) lv.phase = "puntos";
+        if(lv.phase === "clave" && !CLAVE_L4) lv.phase = "origen";
+
+        const key = p => `${p[0]},${p[1]}`;
+        const fmt = p => `(${p[0]}, ${p[1]})`;
+        const pad = p => `(${String(p[0]).padStart(3)},${String(p[1]).padStart(3)})`;
+        const nice = p => `(${String(p[0]).replace("-","−")}, ${String(p[1]).replace("-","−")})`;
+
+        const crt = $("div","crt");
+        crt.innerHTML = `
+          <div class="crt-label"><span>Terminal · Módulo 4</span><span class="alarm-tag"></span></div>
+          <div class="screen">
+            <div class="vib-panel" hidden>
+              <div class="code-title"><span>LISTA DE VIBRACIONES</span><span>1 UNIDAD = 1000 KM</span></div>
+              <ol class="vib">${D.lista.map((p,i)=>`<li><span>${String(i+1).padStart(2,"0")} </span>${pad(p)}</li>`).join("")}</ol>
+              <div class="radio" hidden></div>
+            </div>
+            <hr class="rule vib-rule" hidden>
+            <div class="term" aria-live="polite"></div>
+            <label class="prompt" hidden>
+              <span class="ps"></span>
+              <input type="text" autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false" maxlength="60" aria-label="Respuesta">
+            </label>
+            <hr class="rule">
+            <div class="progress" aria-label="Avance del nivel 4"></div>
+          </div>`;
+        const screen = crt.querySelector(".screen");
+        const panel = crt.querySelector(".vib-panel");
+        const vibRule = crt.querySelector(".vib-rule");
+        const radioBox = crt.querySelector(".radio");
+        const term = crt.querySelector(".term");
+        const prompt = crt.querySelector(".prompt");
+        const ps = crt.querySelector(".ps");
+        const input = crt.querySelector("input");
+        const prog = crt.querySelector(".progress");
+        const tag = crt.querySelector(".alarm-tag");
+
+        const foot = $("div","crt-foot");
+        const pilots = $("div","pilots",
+          `<div class="pilot ok"><i></i><span>Correcto</span></div>
+           <div class="pilot bad"><i></i><span>Error</span></div>`);
+        const light = which => {
+          pilots.querySelector(".ok").classList.toggle("lit", which==="ok");
+          pilots.querySelector(".bad").classList.toggle("lit", which==="bad");
+        };
+        foot.appendChild(pilots);
+        stage.append(crt, foot);
+
+        screen.addEventListener("click", e => { if(e.target.closest(".vib-panel")) return; if(!input.disabled) input.focus(); });
+
+        function line(t, cls, store=true){
+          const p = $("p", cls||"", null); p.textContent = t; term.appendChild(p);
+          term.scrollTop = term.scrollHeight;
+          if(store){ lv.log.push([t, cls||""]); if(lv.log.length>80) lv.log.shift(); save(); }
+        }
+        function setTag(){
+          const sat = lv.phase === "puntos";
+          tag.textContent = sat ? "Receptor saturado" : "Señal limpia";
+          tag.classList.toggle("on", sat);
+        }
+        function showPanel(){
+          panel.hidden = false; vibRule.hidden = false;
+          if(lv.phase === "origen" || lv.phase === "fin"){
+            radioBox.hidden = false;
+            radioBox.textContent = `RADIO DE TRAZADO: ${D.radio}`;
+          }
+        }
+        function drawProgress(){
+          const f1 = lv.phase === "puntos" ? "filled" : "done";
+          const f2 = lv.phase === "fin" ? "done" : (lv.phase === "origen" ? "filled" : "");
+          let extra = "";
+          if(lv.phase === "puntos") extra = "CARGADOS: " + (lv.entries.length ? lv.entries.map(fmt).join(" ") : "NINGUNO");
+          if(lv.phase === "clave")  extra = "ESPERANDO CLAVE";
+          if(lv.phase === "origen") extra = `RADIO ${D.radio}`;
+          prog.innerHTML = `FASE <b class="${f1}">1</b><b class="${f2}">2</b><span>${extra}</span>`;
+        }
+        function ask(){
+          const P = { puntos: lv.entries.length ? `PUNTO ${lv.entries.length+1} O FIN >` : "PUNTO 1 >", clave:"CLAVE >", origen:"ORIGEN >" }[lv.phase];
+          if(!P){ prompt.hidden = true; return; }
+          ps.textContent = P;
+          prompt.hidden = false; input.disabled = false; input.value = "";
+          setTimeout(()=>input.focus({preventScroll:true}), 30);
+        }
+        function reject(msg, retry){
+          sfx.bad(); light("bad");
+          crt.classList.remove("shake"); void crt.offsetWidth; crt.classList.add("shake");
+          line(msg, "err");
+          if(retry) line(retry, "dim");
+        }
+
+        // "(x, y)", "x,y", "x y"; con paréntesis se aceptan varios puntos en la misma línea
+        function parsePoints(raw){
+          const t = raw.replace(/[−–—]/g,"-").replace(/\s+/g," ").trim();
+          const norm = (a,b) => [(+a)||0, (+b)||0];   // evita el -0
+          if(t.includes("(")){
+            const re = /\(\s*([+-]?\d+)\s*[,; ]\s*([+-]?\d+)\s*\)/g;
+            const pts = []; let m;
+            while((m = re.exec(t))) pts.push(norm(m[1], m[2]));
+            const rest = t.replace(re, "").replace(/[\s,;]/g, "");
+            return (pts.length && !rest) ? pts : null;
+          }
+          const m = t.match(/^([+-]?\d+)\s*[,; ]\s*([+-]?\d+)$/);
+          return m ? [norm(m[1], m[2])] : null;
+        }
+
+        function revealRadio(){
+          lv.phase = "origen"; save();
+          setTag(); showPanel(); drawProgress();
+          line(`TRACE CIRCUNFERENCIAS DE RADIO ${D.radio}`, "");
+          line("UBIQUE EL ORIGEN DE LA VIBRACION E INGRESELO COMO X,Y", "");
+          ask();
+        }
+        let finBox = null;
+        function finish(){
+          lv.phase = "fin"; lv.solved = true; save();
+          prompt.hidden = true; input.disabled = true;
+          light("ok"); setTag(); showPanel(); drawProgress();
+          if(!finBox){
+            finBox = $("div","fin",
+              `<span class="fin-k">Transmisión cerrada</span>
+               <strong>Origen localizado</strong>
+               <p class="fin-coord">${nice(D.origen)}${D.lugar ? " · " + D.lugar : ""}</p>
+               <p>${FIN_TEXTO}</p>`);
+            stage.appendChild(finBox);
+          }
+        }
+
+        input.addEventListener("input", ()=>{ if(pilots.querySelector(".bad.lit")) light(null); });
+        input.addEventListener("keydown", e=>{
+          if(e.key !== "Enter") return;
+          e.preventDefault();
+          if(input.disabled) return;
+          const v = input.value.trim().toUpperCase();
+          if(!v) return;
+          line(`${ps.textContent} ${v}`, "echo");
+
+          /* ----- fase 1: puntos sobrevivientes ----- */
+          if(lv.phase === "puntos"){
+            if(v === "BORRAR"){
+              lv.entries = []; save(); sfx.click(); drawProgress();
+              line("   CARGA BORRADA . EMPIECE DE NUEVO", "dim"); ask(); return;
+            }
+            if(v === "FIN"){
+              if(!lv.entries.length){ sfx.bad(); line("   NO HAY PUNTOS CARGADOS", "err"); ask(); return; }
+              prompt.hidden = true; input.disabled = true;
+              line("ANALIZANDO SEÑAL ...", "dim");
+              setTimeout(()=>{
+                if(!term.isConnected) return;
+                const want = new Set(D.sobreviven.map(key));
+                const got = new Set(lv.entries.map(key));
+                const ok = got.size === want.size && [...want].every(k => got.has(k));
+                if(ok){
+                  sfx.ok(); light("ok");
+                  line("SEÑAL LIMPIA . LAS LECTURAS FALSAS FUERON DESCARTADAS", "");
+                  lv.entries = []; save();
+                  if(CLAVE_L4){
+                    lv.phase = "clave"; save(); setTag(); drawProgress();
+                    line("PARA CONTINUAR SE REQUIERE LA CLAVE DEL LABORATORIO", "");
+                    ask();
+                  }else{
+                    revealRadio();
+                  }
+                }else{
+                  reject("   ERROR . LA SEÑAL SIGUE CONTAMINADA", "VUELVA A CARGAR LOS PUNTOS DESDE EL PRIMERO");
+                  lv.entries = []; save(); drawProgress(); ask();
+                }
+              }, 1100);
+              return;
+            }
+            const pts = parsePoints(v);
+            if(!pts){ sfx.bad(); line("   ESCRIBA CADA PUNTO COMO X,Y . POR EJEMPLO 7,-2", "err"); ask(); return; }
+            pts.forEach(p=>{
+              if(lv.entries.some(e => key(e) === key(p))) line(`   ${fmt(p)} YA ESTA CARGADO`, "dim");
+              else if(lv.entries.length >= 20) line("   DEMASIADOS PUNTOS . ESCRIBA FIN O BORRAR", "err");
+              else lv.entries.push(p);
+            });
+            sfx.click(); save(); drawProgress(); light(null); ask();
+            return;
+          }
+
+          /* ----- clave del facilitador (opcional) ----- */
+          if(lv.phase === "clave"){
+            if(v.replace(/\s+/g,"") === CLAVE_L4.toUpperCase().replace(/\s+/g,"")){
+              sfx.click(); line("   CLAVE ACEPTADA", "dim"); revealRadio();
+            }else{
+              reject("   CLAVE INCORRECTA"); ask();
+            }
+            return;
+          }
+
+          /* ----- fase 2: origen ----- */
+          if(lv.phase === "origen"){
+            const pts = parsePoints(v);
+            if(!pts || pts.length !== 1){ sfx.bad(); line("   ESCRIBA UN SOLO PUNTO COMO X,Y", "err"); ask(); return; }
+            prompt.hidden = true; input.disabled = true;
+            line("TRIANGULANDO ...", "dim");
+            setTimeout(()=>{
+              if(!term.isConnected) return;
+              if(key(pts[0]) === key(D.origen)){
+                sfx.ok();
+                line(`ORIGEN CONFIRMADO EN ${fmt(D.origen)}`, "");
+                line("FIN DE LA TRANSMISION", "");
+                finish();
+              }else{
+                reject("   ERROR . NO HAY VIBRACION EN ESE PUNTO");
+                ask();
+              }
+            }, 900);
+          }
+        });
+
+        setTag(); drawProgress();
+        lv.log.forEach(([t,c]) => line(t, c, false));
+        if(lv.phase === "fin"){ finish(); return; }
+        if(lv.booted){ showPanel(); ask(); return; }
+
+        // arranque: receptor saturado (guiño a las alarmas 1201/1202 del Apollo 11)
+        const BOOT = [
+          ["MODULO 4 . RECEPTOR DE VIBRACIONES","dim"],
+          ["RECEPTOR EN (0, 0) . ANTENA AL NORTE","dim"],
+          ["1202 PROGRAM ALARM","err"],
+          ["RECEPTOR SATURADO: DEMASIADAS LECTURAS","err"],
+          ["1201 PROGRAM ALARM","err"],
+          ["HAY LECTURAS FALSAS MEZCLADAS CON LAS REALES.",""],
+          ["MARQUE LA LISTA EN EL PLANISFERIO Y LIMPIE LA SEÑAL.",""]
+        ];
+        input.disabled = true;
+        const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        let k = 0;
+        (function next(){
+          if(!term.isConnected) return;
+          if(k < BOOT.length){
+            const [t,c] = BOOT[k++];
+            line(t, c);
+            if(c === "err") sfx.alarm();
+            setTimeout(next, reduce ? 0 : 650);
+          }else{
+            lv.booted = true; save();
+            showPanel();
+            line("CARGUE LOS PUNTOS QUE SOBREVIVEN, UNO POR LINEA.", "");
+            line("ESCRIBA FIN PARA VERIFICAR O BORRAR PARA EMPEZAR DE NUEVO.", "");
+            ask();
+          }
+        })();
       }
     }
   ];
