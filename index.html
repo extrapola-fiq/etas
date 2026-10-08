@@ -39,7 +39,8 @@ html{box-sizing:border-box} body{margin:0} [hidden]{display:none!important} img{
     color:var(--engrave);
     font-family:var(--type);
     padding-inline:16px;
-    padding-block:24px;
+    padding-top:calc(24px + env(safe-area-inset-top, 0px));
+    padding-bottom:calc(24px + env(safe-area-inset-bottom, 0px));
     box-sizing:border-box;
     display:flex;
     justify-content:center;
@@ -224,6 +225,7 @@ html{box-sizing:border-box} body{margin:0} [hidden]{display:none!important} img{
   .handle:focus-visible{outline:3px solid var(--brass-hi); outline-offset:4px}
   .lever.locked .handle{cursor:not-allowed; filter:saturate(.4) brightness(.8)}
   .lever .hint{font-size:11px; opacity:.6; text-align:center; max-width:12ch; line-height:1.3}
+  .lever.cooling .hint{opacity:1; color:var(--brass-hi); font-variant-numeric:tabular-nums}
 
   /* readout */
   .readout{
@@ -337,6 +339,7 @@ html{box-sizing:border-box} body{margin:0} [hidden]{display:none!important} img{
   .progress{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
   .progress b{font-weight:400; display:inline-block; min-width:4.5ch; text-align:center; border:1px solid var(--ph-dim); padding:0 4px}
   .progress b.done{background:var(--ph); color:var(--glass); text-shadow:none}
+  .progress b.filled{background:var(--ph-faint)}
   .crt-foot{display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap}
 
   /* módulo 3: diagnóstico de bichos */
@@ -720,6 +723,33 @@ html{box-sizing:border-box} body{margin:0} [hidden]{display:none!important} img{
           stage.appendChild(nextBtn);
         }
 
+        const WAIT_MS = 10000;
+        const hint = lever.querySelector(".hint");
+        const HINT_TXT = hint.textContent;
+        let cdTimer = null;
+        function cooldown(){
+          clearInterval(cdTimer);
+          const tick = ()=>{
+            if(!lever.isConnected){ clearInterval(cdTimer); return; }
+            const left = Math.ceil(((lv.waitUntil||0) - Date.now()) / 1000);
+            if(left > 0){
+              lever.lock(true); lever.classList.add("cooling");
+              hint.textContent = `Recargando relés · ${left} s`;
+              return;
+            }
+            clearInterval(cdTimer);
+            lv.waitUntil = 0; save();
+            lever.classList.remove("cooling");
+            hint.textContent = HINT_TXT;
+            if(!lv.solved){
+              lever.lock(false);
+              type(readout.tape, "PANEL EN ESPERA · Relés listos. Podés volver a intentar.");
+            }
+          };
+          tick();
+          cdTimer = setInterval(tick, 250);
+        }
+
         function check(){
           const names = lv.lamps.map(ci => ci>=0 ? COLORS[ci].id : null);
           if(names.includes(null)){
@@ -740,7 +770,9 @@ html{box-sizing:border-box} body{margin:0} [hidden]{display:none!important} img{
           }else{
             readout.light("bad"); sfx.bad();
             bank.classList.remove("shake"); void bank.offsetWidth; bank.classList.add("shake");
-            type(readout.tape, "ERROR · Secuencia rechazada. Revisá el orden de los colores y volvé a intentar.");
+            type(readout.tape, "ERROR · Secuencia rechazada. Los relés tardan 10 segundos en recargarse.");
+            lv.waitUntil = Date.now() + WAIT_MS; save();
+            cooldown();
           }
         }
 
@@ -748,6 +780,9 @@ html{box-sizing:border-box} body{margin:0} [hidden]{display:none!important} img{
           readout.light("ok"); lever.lock(true);
           type(readout.tape, "MÁQUINA ENCENDIDA · Relés energizados. Módulo 2 listo para cargar.");
           showNext();
+        }else if((lv.waitUntil||0) > Date.now()){
+          type(readout.tape, "ERROR · Secuencia rechazada. Los relés tardan 10 segundos en recargarse.");
+          cooldown();
         }else{
           type(readout.tape, "PANEL EN ESPERA · Ajustá las cuatro lámparas y bajá la palanca.");
         }
@@ -763,7 +798,9 @@ html{box-sizing:border-box} body{margin:0} [hidden]{display:none!important} img{
           ["LECTORA DE TARJETAS ..... LISTA","dim"],
           ["PROGRAMA DE ACCESO: SE REQUIEREN 4 SENTENCIAS",""]
         ];
-        const lv = state.l2 = state.l2 || { step:0, log:[], booted:false, solved:false };
+        const lv = state.l2 = state.l2 || { entries:[], log:[], booted:false, solved:false };
+        if(!Array.isArray(lv.entries)) lv.entries = [];   // partidas guardadas con la versión anterior
+        delete lv.step;
 
         // tabla de codificación (tarjeta perforada: zona × dígito)
         const HEAD = ["", "-", "1","2","3","4","5","6","7","8","9"];
@@ -789,7 +826,7 @@ html{box-sizing:border-box} body{margin:0} [hidden]{display:none!important} img{
               <input id="term-in" type="text" autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false" maxlength="24" aria-label="Sentencia">
             </label>
             <hr class="rule">
-            <div class="progress" aria-label="Sentencias aceptadas"></div>
+            <div class="progress" aria-label="Sentencias cargadas"></div>
           </div>`;
         const screen = crt.querySelector(".screen");
         const term = crt.querySelector(".term");
@@ -817,17 +854,20 @@ html{box-sizing:border-box} body{margin:0} [hidden]{display:none!important} img{
           if(store){ lv.log.push([t, cls||""]); if(lv.log.length>60) lv.log.shift(); save(); }
         }
         function drawProgress(){
-          prog.innerHTML = "SENTENCIAS " + SENTENCES.map((_,i)=>`<b class="${i<lv.step?"done":""}">${i<lv.step?"OK":i+1}</b>`).join("");
+          prog.innerHTML = "SENTENCIAS " + SENTENCES.map((_,i)=>
+            lv.solved ? `<b class="done">OK</b>`
+            : i < lv.entries.length ? `<b class="filled">${i+1}</b>`
+            : `<b>${i+1}</b>`).join("");
         }
         function ask(){
-          if(lv.step >= SENTENCES.length){ prompt.hidden = true; return; }
-          ps.textContent = `INGRESE SENTENCIA ${lv.step+1} >`;
+          if(lv.solved || lv.entries.length >= SENTENCES.length){ prompt.hidden = true; return; }
+          ps.textContent = `INGRESE SENTENCIA ${lv.entries.length+1} >`;
           prompt.hidden = false; input.disabled = false; input.value = "";
           setTimeout(()=>input.focus({preventScroll:true}), 30);
         }
         let nextBtn = null;
         function finish(){
-          lv.solved = true; save();
+          lv.solved = true; save(); drawProgress();
           prompt.hidden = true; light("ok");
           if(!nextBtn){
             nextBtn = $("button","next","Siguiente nivel →"); nextBtn.type = "button";
@@ -841,31 +881,39 @@ html{box-sizing:border-box} body{margin:0} [hidden]{display:none!important} img{
           e.preventDefault();
           const v = input.value.trim().toUpperCase().replace(/\s+/g," ");
           if(!v) return;
-          line(`SENTENCIA ${lv.step+1} > ${v}`, "echo");
-          if(v === SENTENCES[lv.step]){
-            sfx.click();
-            lv.step++; save(); drawProgress();
-            line("   ACEPTADA", "");
-            if(lv.step === SENTENCES.length){
+          if(input.disabled) return;
+          line(`SENTENCIA ${lv.entries.length+1} > ${v}`, "echo");
+          sfx.click();
+          lv.entries.push(v); save(); drawProgress();
+          if(lv.entries.length < SENTENCES.length){ light(null); ask(); return; }
+
+          // las cuatro cargadas: recién ahora se verifica el programa completo
+          prompt.hidden = true; input.disabled = true;
+          line("VERIFICANDO PROGRAMA DE ACCESO ...", "dim");
+          setTimeout(()=>{
+            if(!term.isConnected) return;
+            const ok = SENTENCES.every((s,i)=>lv.entries[i] === s);
+            if(ok){
               sfx.ok();
               line("PROGRAMA DE ACCESO COMPLETO", "");
               line("ACCESO CONCEDIDO . CARGANDO NIVEL 3", "");
               finish();
             }else{
-              light(null); ask();
+              sfx.bad(); light("bad");
+              crt.classList.remove("shake"); void crt.offsetWidth; crt.classList.add("shake");
+              line("   ERROR . PROGRAMA RECHAZADO", "err");
+              line("VUELVA A INGRESAR LAS 4 SENTENCIAS DESDE LA PRIMERA", "dim");
+              lv.entries = []; save(); drawProgress();
+              ask();
             }
-          }else{
-            sfx.bad(); light("bad");
-            crt.classList.remove("shake"); void crt.offsetWidth; crt.classList.add("shake");
-            line("   ERROR . SENTENCIA NO RECONOCIDA", "err");
-            ask();
-          }
+          }, 900);
         });
         input.addEventListener("input", ()=>{ if(pilots.querySelector(".bad.lit")) light(null); });
 
         drawProgress();
         lv.log.forEach(([t,c]) => line(t, c, false));
         if(lv.solved){ finish(); return; }
+        if(lv.entries.length >= SENTENCES.length){ lv.entries = []; save(); drawProgress(); }
         if(lv.booted){ ask(); return; }
 
         // arranque: las líneas aparecen de a una
