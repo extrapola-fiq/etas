@@ -831,29 +831,22 @@ html{box-sizing:border-box} body{margin:0} [hidden]{display:none!important} img{
   ];
 
   /* ---------- nivel 4: origen de la vibración (índice = state.m) ----------
-     Receptor en (0,0), antena al norte. 1 unidad del mapa = 1000 km. Mapa: x −20..20, y −10..10.
-     Reglas de la fase 1 (las aplican los jugadores):
-       R1  se descarta todo punto con |x| > 9
-       R2  espejo: si están (x,y) y (−x,−y), se descarta el de y < 0
-       R3  eco: si un punto es 2 o 3 veces otro, se descarta el mayor (4 veces o más: se conserva)
-     Mariposas 1 y 2 verificadas: el resultado no depende del orden de las reglas y las
-     3 circunferencias se cortan en un único punto. */
+     Receptor en (0,0), antena al norte. 1 cuadro del mapa = 100 km (coordenadas en cientos de km).
+     Reglas de la fase 1 (las aplican los jugadores; la consola solo valida el resultado):
+       R1  se descarta todo punto con |x| > 9 (900 km)
+       R2  señales partidas: se descartan los dos puntos del par
+       R3  ecos: se descarta el eco
+     Mariposa 1 verificada: cada punto lo tacha una sola regla (el orden no importa)
+     y las 3 circunferencias de 500 km se cortan solo en (4,1).
+     Por ahora todas las mariposas usan estos datos. */
   const NIVEL4 = [
     { // mariposa 1
-      lista:     [[12,3],[0,2],[-14,6],[9,-5],[0,6],[-13,2],[-9,5],[15,-4],[0,8],[-11,-7],[13,-2]],
-      sobreviven:[[0,2],[0,8],[-9,5]],
-      radio: 5,
-      origen: [-4,5],
-      lugar: "Atlántico Norte"
-    },
-    { // mariposa 2
-      lista:     [[-6,2],[9,-1],[-9,1],[14,4],[-6,-8],[10,3],[-12,5],[-3,1],[12,-5],[-13,-9],[11,8]],
-      sobreviven:[[-9,1],[-6,-8],[-3,1]],
-      radio: 5,
-      origen: [-6,-3],
-      lugar: "Misiones, Argentina"
+      lista:      [[6,-6],[-5,3],[10,3],[1,5],[-13,6],[9,1],[2,10],[-11,-4],[4,-4],[-5,-3],[9,-9],[14,7]],
+      sobreviven: [[1,5],[9,1],[4,-4]],
+      errorKm: 500,
+      origen: [4,1]
     }
-    // mariposas 3 a 8: pendientes (mientras tanto se muestra "en construcción")
+    // mariposas 2 a 8: pendientes (mientras tanto usan los datos de la mariposa 1)
   ];
   /* Clave del facilitador antes de revelar el radio. Vacía = no se pide. Ejemplo: "ORION" */
   const CLAVE_L4 = "";
@@ -1074,8 +1067,8 @@ html{box-sizing:border-box} body{margin:0} [hidden]{display:none!important} img{
       sc.dataset.mode = mode;
       let pts = BLIPS[mode] || [];
       if(mode === "found"){
-        const D = (typeof NIVEL4 !== "undefined") && NIVEL4[state.m|0];
-        pts = D ? [[D.origen[0]/22, D.origen[1]/22]] : [];
+        const D = (typeof NIVEL4 !== "undefined") && (NIVEL4[state.m|0] || NIVEL4[0]);
+        pts = D ? [[D.origen[0]/15, D.origen[1]/15]] : [];
       }
       const T = mode === "erratic" ? 5.5 : 4;
       document.getElementById("blips").innerHTML = pts.map(([x,y],k)=>{
@@ -1737,7 +1730,7 @@ html{box-sizing:border-box} body{margin:0} [hidden]{display:none!important} img{
     {
       name: "Receptor · Origen de la vibración",
       mount(stage){
-        const D = NIVEL4[state.m|0];
+        const D = NIVEL4[state.m|0] || NIVEL4[0];
         if(!D){
           const w = $("div","wip",
             `<strong>Receptor en construcción</strong>
@@ -1761,7 +1754,7 @@ html{box-sizing:border-box} body{margin:0} [hidden]{display:none!important} img{
           <div class="screen split">
             <div class="pane-a" hidden>
             <div class="vib-panel" hidden>
-              <div class="code-title"><span>LISTA DE VIBRACIONES</span><span>1 UNIDAD = 1000 KM</span></div>
+              <div class="code-title"><span>LISTA DE VIBRACIONES</span><span>1 CUADRO = 100 KM</span></div>
               <ol class="vib">${D.lista.map((p,i)=>`<li><span>${String(i+1).padStart(2,"0")} </span>${pad(p)}</li>`).join("")}</ol>
               <div class="radio" hidden></div>
             </div>
@@ -1815,7 +1808,7 @@ html{box-sizing:border-box} body{margin:0} [hidden]{display:none!important} img{
           panel.hidden = false; vibRule.hidden = false; panel.parentElement.hidden = false;
           if(lv.phase === "origen" || lv.phase === "fin"){
             radioBox.hidden = false;
-            radioBox.textContent = `ERROR DEL RECEPTOR: ${D.radio}`;
+            radioBox.textContent = `ERROR DEL RECEPTOR: ${D.errorKm} KM`;
           }
         }
         function drawProgress(){
@@ -1859,7 +1852,7 @@ html{box-sizing:border-box} body{margin:0} [hidden]{display:none!important} img{
         function revealRadio(){
           lv.phase = "origen"; save();
           setTag(); showPanel(); drawProgress();
-          line(`ERROR DEL RECEPTOR: ${D.radio}`, "");
+          line(`ERROR DEL RECEPTOR: ${D.errorKm} KM`, "");
           line("UBIQUE EL ORIGEN DE LA VIBRACION E INGRESELO COMO X,Y", "");
           ask();
         }
