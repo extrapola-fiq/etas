@@ -113,7 +113,9 @@ html{box-sizing:border-box} body{margin:0} [hidden]{display:none!important} img{
   }
 
   /* stage */
-  .stage{min-height:260px; display:flex; flex-direction:column; gap:22px}
+  .stage{position:relative; min-height:260px; display:flex; flex-direction:column; gap:22px}
+  .readout:has(> .next){grid-template-columns:auto 1fr auto}
+  .readout > .next{align-self:center}
   .level-name{
     align-self:flex-start;
     font-family:var(--type); color:var(--plate-ink);
@@ -416,15 +418,35 @@ html{box-sizing:border-box} body{margin:0} [hidden]{display:none!important} img{
   .vib span{opacity:.5}
   .radio{align-self:flex-start; border:1px solid var(--ph); padding:2px 10px; letter-spacing:.05em}
   .fin{
-    display:flex; flex-direction:column; align-items:center; gap:12px; text-align:center;
+    position:absolute; inset:0; z-index:5;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px; text-align:center;
     padding:30px 20px; border-radius:10px;
-    background:radial-gradient(120% 120% at 50% 0%, rgba(236,208,142,.10), rgba(0,0,0,.25) 70%);
+    background:radial-gradient(120% 120% at 50% 0%, rgba(236,208,142,.10), transparent 70%), linear-gradient(180deg, rgba(30,37,32,.95), rgba(18,22,19,.97));
+    -webkit-backdrop-filter:blur(4px); backdrop-filter:blur(4px);
+    animation:finIn .6s ease both;
+  }
+  @keyframes finIn{from{opacity:0}to{opacity:1}}
+  .fin{
     box-shadow:inset 0 3px 8px rgba(0,0,0,.55), 0 0 0 2px var(--brass-lo);
   }
   .fin-k{font-size:11px; letter-spacing:.2em; text-transform:uppercase; color:var(--engrave); opacity:.85}
   .fin strong{font-family:var(--stencil); font-weight:800; font-size:clamp(30px,6vw,46px); line-height:1; color:var(--brass-hi); letter-spacing:.06em}
   .fin-coord{margin:0; font-family:"VT323","Courier New",monospace; font-size:clamp(22px,4vw,30px); color:#86ffa4; text-shadow:0 0 8px rgba(134,255,164,.55)}
   .fin p{margin:0; max-width:46ch; line-height:1.5}
+
+  /* introducción narrada */
+  .intro .screen{min-height:clamp(260px,42vw,340px); justify-content:space-between; cursor:default}
+  .intro-meta{display:flex; justify-content:space-between; gap:8px; flex-wrap:wrap; opacity:.65; font-variant-numeric:tabular-nums}
+  .i-sub{margin:0 auto; max-width:34ch; min-height:4.2em; display:flex; align-items:center; justify-content:center;
+       text-align:center; text-wrap:balance; font-size:clamp(21px,3.6vw,29px); line-height:1.25}
+  .wave{display:flex; justify-content:center; align-items:flex-end; gap:4px; height:26px}
+  .wave i{width:5px; height:4px; background:var(--ph); box-shadow:0 0 6px rgba(134,255,164,.6); opacity:.5}
+  .intro.talking .wave i{animation:vu .9s ease-in-out infinite alternate; opacity:.95}
+  .wave i:nth-child(3n){animation-delay:-.3s} .wave i:nth-child(4n+1){animation-delay:-.55s} .wave i:nth-child(5n+2){animation-delay:-.75s}
+  @keyframes vu{0%{height:4px}35%{height:18px}60%{height:9px}100%{height:24px}}
+  .intro-ctrls{display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap}
+  .intro-ctrls .next{align-self:auto}
+  .intro-note{margin:0; font-size:12px; line-height:1.5; opacity:.75; max-width:60ch}
 
   /* placeholder level */
   .wip{
@@ -435,6 +457,197 @@ html{box-sizing:border-box} body{margin:0} [hidden]{display:none!important} img{
   }
   .wip strong{font-family:var(--stencil); font-weight:800; font-size:clamp(26px,5vw,38px); color:var(--brass-hi); letter-spacing:.06em}
   .wip p{margin:0; max-width:40ch; line-height:1.5}
+
+  /* ===== armazón horizontal: panel lateral (radar + estado) y área de trabajo ===== */
+  .panel{display:grid; grid-template-columns:1fr; grid-template-areas:"side" "work" "foot"; align-content:start}
+  .side{grid-area:side; display:grid; grid-template-columns:1fr auto; grid-template-areas:"maker scope" "read scope" "checks checks"; gap:10px 18px; align-items:center; min-width:0}
+  .side .maker{grid-area:maker}
+  .scope-box{grid-area:scope; display:flex; flex-direction:column; align-items:center; gap:8px}
+  .scope-read{grid-area:read; margin:0; font-family:"VT323","Courier New",monospace; font-size:19px; letter-spacing:.06em;
+    color:#86ffa4; text-shadow:0 0 6px rgba(134,255,164,.55); background:#03110a; border-radius:4px; padding:3px 10px;
+    box-shadow:inset 0 0 10px rgba(0,0,0,.9), 0 0 0 2px var(--brass-lo); justify-self:start; text-align:center}
+  .scope-read.warn{color:#ffb86b; text-shadow:0 0 6px rgba(255,160,80,.6)}
+  .scope-read.dead{color:rgba(134,255,164,.35); text-shadow:none}
+  .work{grid-area:work; min-width:0; container-type:inline-size}
+  .panel > .foot{grid-area:foot}
+
+  /* radar */
+  .scope{
+    --T:4s;
+    position:relative; width:clamp(84px, 24vw, 120px); aspect-ratio:1; border-radius:50%; flex-shrink:0;
+    background:conic-gradient(from 200deg, var(--brass-lo), var(--brass-hi), var(--brass), var(--brass-lo), var(--brass-hi), var(--brass-lo));
+    box-shadow:0 4px 0 #0b0d0a, 0 8px 14px rgba(0,0,0,.55);
+  }
+  .scope-glass{
+    position:absolute; inset:7%; border-radius:50%; overflow:hidden;
+    background:
+      linear-gradient(180deg, transparent calc(50% - .5px), rgba(134,255,164,.22) calc(50% - .5px) calc(50% + .5px), transparent calc(50% + .5px)),
+      linear-gradient(90deg, transparent calc(50% - .5px), rgba(134,255,164,.22) calc(50% - .5px) calc(50% + .5px), transparent calc(50% + .5px)),
+      repeating-radial-gradient(circle closest-side at 50% 50%, transparent 0 calc(33.33% - 1px), rgba(134,255,164,.2) calc(33.33% - 1px) 33.33%),
+      radial-gradient(circle closest-side, #0c2a18 0%, #03110a 75%, #000 100%);
+    box-shadow:inset 0 0 0 2px #000, inset 0 0 24px rgba(0,0,0,.9);
+    transition:filter .8s ease;
+  }
+  .scope-glass::after{content:""; position:absolute; inset:0; border-radius:50%; pointer-events:none;
+    background:radial-gradient(circle at 35% 28%, rgba(255,255,255,.10), transparent 30%), repeating-linear-gradient(180deg, rgba(0,0,0,.25) 0 1px, transparent 1px 3px)}
+  .scope .sweep{position:absolute; inset:0; border-radius:50%; opacity:0;
+    background:conic-gradient(from 0deg, transparent 0deg 290deg, rgba(134,255,164,.10) 300deg, rgba(134,255,164,.38) 356deg, rgba(210,255,220,.9) 359.5deg, transparent 360deg);
+    animation:spin var(--T) linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .scope .noise{position:absolute; inset:-25%; opacity:0; pointer-events:none;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .53 0 0 0 0 1 0 0 0 0 .64 0 0 0 1.6 -.75'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+    animation:static .32s steps(4) infinite}
+  @keyframes static{0%{transform:translate(0,0)}25%{transform:translate(-9%,6%)}50%{transform:translate(7%,-8%)}75%{transform:translate(-5%,-4%)}}
+  .blip{position:absolute; left:calc(50% + var(--x) * 46%); top:calc(50% - var(--y) * 46%); width:7px; height:7px; margin:-3.5px 0 0 -3.5px; border-radius:50%;
+    background:#d6ffe0; box-shadow:0 0 8px 2px rgba(134,255,164,.85); opacity:0}
+  .scope[data-mode="off"] .scope-glass{filter:brightness(.4) saturate(.6)}
+  .scope[data-mode="off"] .blip{animation:ghost 7s infinite; animation-delay:var(--d)}
+  @keyframes ghost{0%,88%,100%{opacity:0}90%{opacity:.9}93%{opacity:.2}95%{opacity:.7}}
+  .scope[data-mode="noise"] .noise{opacity:.6}
+  .scope[data-mode="noise"] .scope-glass{filter:brightness(.8)}
+  .scope[data-mode="erratic"]{--T:5.5s}
+  .scope[data-mode="erratic"] .sweep{opacity:.75}
+  .scope[data-mode="erratic"] .noise{opacity:.28}
+  .scope[data-mode="erratic"] .blip{animation:flick 1.7s steps(1) infinite; animation-delay:var(--d)}
+  @keyframes flick{0%,100%{opacity:0}12%{opacity:.85}30%{opacity:0}61%{opacity:.6}70%{opacity:0}}
+  .scope[data-mode="signal"] .sweep, .scope[data-mode="found"] .sweep{opacity:1}
+  .scope[data-mode="signal"] .blip{animation:ping var(--T) linear infinite; animation-delay:var(--d)}
+  @keyframes ping{0%{opacity:1; transform:scale(1.3)}8%{opacity:.9; transform:scale(1)}70%{opacity:.12}100%{opacity:0}}
+  .scope[data-mode="found"] .blip{opacity:1; background:#fff1c4; box-shadow:0 0 10px 3px rgba(255,214,120,.9)}
+  .scope[data-mode="found"] .blip::after{content:""; position:absolute; inset:-3px; border-radius:50%; border:1px solid rgba(255,214,120,.9); animation:ripple 2s ease-out infinite}
+  @keyframes ripple{to{inset:-16px; opacity:0}}
+
+  /* estado de las reparaciones */
+  .checks{grid-area:checks; list-style:none; margin:0; padding:10px 12px; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px 14px;
+    border-radius:8px; background:linear-gradient(180deg, rgba(0,0,0,.28), rgba(0,0,0,.14)); box-shadow:inset 0 3px 8px rgba(0,0,0,.55), 0 1px 0 rgba(255,255,255,.06)}
+  .checks li{display:grid; grid-template-columns:auto 1fr; grid-template-rows:auto auto; column-gap:9px; align-items:center; min-width:0}
+  .checks .led{grid-row:1 / 3; width:13px; height:13px; border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, rgba(255,255,255,.18) 0 12%, #2b2d28 40%, #121310);
+    box-shadow:0 0 0 2px var(--brass-lo), inset 0 -2px 3px rgba(0,0,0,.6)}
+  .checks .ck-name{font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--engrave); overflow-wrap:anywhere; line-height:1.2}
+  .checks .ck-st{font-size:10px; letter-spacing:.14em; text-transform:uppercase; opacity:.6}
+  .checks li.ck-bad .led{background:radial-gradient(circle at 35% 30%, #ffd3cf 0 8%, #a3241c 45%, #4a0905)}
+  .checks li.ck-fix .led{background:radial-gradient(circle at 35% 30%, #fff1d0 0 10%, #f0a531 45%, #6d4207); box-shadow:0 0 0 2px var(--brass-lo), 0 0 10px 2px rgba(240,165,49,.55); animation:blink 1.1s steps(1) infinite}
+  .checks li.ck-fix .ck-st{color:#ffcf7d; opacity:1}
+  .checks li.ck-ok .led{background:radial-gradient(circle at 35% 30%, #eaffea 0 10%, var(--ok) 40%, #0f6a22); box-shadow:0 0 0 2px var(--brass-lo), 0 0 10px 2px rgba(70,224,106,.5)}
+  .checks li.ck-ok .ck-st{color:#9ff5b4; opacity:1}
+  .checks li.ck-off .ck-st{opacity:.4}
+
+  /* paneles divididos dentro de la pantalla CRT */
+  .pane-a, .pane-b{display:flex; flex-direction:column; gap:14px; min-width:0; min-height:0}
+  .pane-a{container-type:inline-size}
+  @container (min-width: 560px){
+    .screen.split{display:grid; grid-template-columns:minmax(0,1.05fr) minmax(0,1fr); gap:0; align-items:stretch}
+    .screen.split.s3{grid-template-columns:minmax(0,1.35fr) minmax(0,1fr)}
+    .screen.split:has(> .pane-a[hidden]){grid-template-columns:minmax(0,1fr)}
+    .screen.split > .pane-a{padding-right:clamp(14px,2.4cqi,28px); border-right:1px dashed var(--ph-faint)}
+    .screen.split > .pane-a + .pane-b{padding-left:clamp(14px,2.4cqi,28px)}
+    .screen.split .split-rule{display:none}
+  }
+  @container (max-width: 430px){ .falla{grid-template-columns:1fr; justify-items:start} }
+
+  /* --- dos columnas: computadora y celular acostado --- */
+  @media (min-width: 900px), (orientation: landscape) and (min-width: 600px) and (max-height: 540px){
+    body{align-items:center}
+    .panel{
+      max-width:1500px;
+      grid-template-columns:clamp(200px, 22vw, 300px) minmax(0,1fr);
+      grid-template-rows:minmax(0,1fr) auto;
+      grid-template-areas:"side work" "foot work";
+      gap:clamp(14px,1.8vw,24px) clamp(18px,2.4vw,36px);
+    }
+    .side{grid-template-columns:1fr; grid-template-areas:"maker" "scope" "read" "checks"; align-content:start; justify-items:stretch; gap:clamp(10px,1.8vh,18px)}
+    .scope-box{justify-self:center}
+    .scope{width:clamp(110px, min(17vw, 24vh), 220px)}
+    .maker h1{font-size:clamp(26px, 2.5vw, 40px)}
+    .maker small{letter-spacing:.14em}
+    .scope-read{justify-self:center}
+    .checks{grid-template-columns:1fr; gap:10px}
+    .side{border-right:1px solid rgba(0,0,0,.35); box-shadow:1px 0 0 rgba(255,255,255,.05); padding-right:clamp(14px,2vw,26px)}
+    .panel > .foot{border-right:1px solid rgba(0,0,0,.35); padding-right:clamp(14px,2vw,26px); flex-direction:column; align-items:flex-start; gap:8px; padding-top:10px}
+    .panel > .foot .switches{gap:6px}
+    .panel > .foot .sw{letter-spacing:.06em; padding:5px 8px}
+  }
+  /* --- computadora: todo entra en una pantalla --- */
+  @media (min-width: 900px) and (min-height: 560px){
+    body{padding-top:calc(16px + env(safe-area-inset-top, 0px)); padding-bottom:calc(16px + env(safe-area-inset-bottom, 0px))}
+    .panel{height:calc(100dvh - 32px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)); padding:clamp(18px,3vh,32px) clamp(20px,2.6vw,40px)}
+    .side{overflow-y:auto; scrollbar-width:none}
+    .work{overflow-y:auto; scrollbar-width:thin; scrollbar-color:var(--brass-lo) transparent}
+    .stage{min-height:100%; gap:clamp(12px,2vh,22px)}
+    .stage > .crt{flex:1 1 auto}
+    .stage > .bank{flex:1 1 auto}
+    .lamp{--size:clamp(64px, min(8.5vw, 17vh), 130px)}
+    .slot-plate{height:clamp(170px, 30vh, 260px)}
+    .crt > .screen{flex:1 1 auto}
+    .screen{font-size:clamp(15px, 2.6vh, 21px)}
+    .pane-b{flex:1 1 auto}
+    .pane-b > .term, .screen:not(.split) > .term{flex:1 1 0; height:auto; min-height:100px}
+    .pane-b > .alerta{flex:0 1 auto; min-height:3.5em; overflow-y:auto; scrollbar-width:thin; scrollbar-color:var(--ph-faint) transparent}
+    .stage{height:100%; min-height:0}
+    .stage > .crt{min-height:0}
+    .crt > .screen{min-height:0}
+    .pane-a, .pane-b{overflow:hidden}
+  }
+  @media (min-width: 900px) and (min-height: 560px) and (max-height: 720px){
+    .stage{gap:10px}
+    .level-name{padding:4px 12px; font-size:12px}
+    .crt{padding:10px 12px; gap:6px}
+    .screen{padding:12px 16px; gap:10px}
+    .pilot i{width:18px; height:18px}
+    .pilot{gap:3px}
+    .bank{padding:16px 22px}
+    .intro .screen{min-height:0}
+    .mapa{grid-template-columns:repeat(5, clamp(28px, 5.4vh, 44px)); grid-auto-rows:clamp(28px, 5.4vh, 44px)}
+  }
+  /* --- celular acostado: compacto, el área de trabajo se desplaza sola --- */
+  @media (orientation: landscape) and (max-height: 540px) and (min-width: 600px){
+    body{padding:0; padding-left:env(safe-area-inset-left, 0px); padding-right:env(safe-area-inset-right, 0px)}
+    .panel{height:100dvh; border-radius:0; padding:10px 14px calc(8px + env(safe-area-inset-bottom, 0px)); gap:8px 16px; grid-template-columns:clamp(170px, 26vw, 220px) minmax(0,1fr)}
+    .screw{display:none}
+    .side, .work{overflow-y:auto; scrollbar-width:none}
+    .side{gap:8px; padding-right:12px}
+    .maker small{display:none}
+    .maker h1{font-size:22px}
+    .scope{width:clamp(70px, 26vh, 110px)}
+    .scope-read{font-size:15px; padding:1px 8px}
+    .checks{padding:7px 9px; gap:6px}
+    .checks .ck-name{font-size:10px}
+    .checks .ck-st{font-size:8.5px}
+    .panel > .foot{padding-top:6px; gap:6px}
+    .panel > .foot > span{display:none}
+    .sw{padding:4px 6px; font-size:10px}
+    .stage{gap:10px; min-height:0}
+    .level-name{font-size:11px; padding:4px 10px}
+    .crt{padding:8px; gap:6px; border-radius:12px}
+    .crt-label{font-size:9px}
+    .screen{padding:10px 12px; font-size:16px; gap:8px}
+    .term{height:140px}
+    .t3{height:120px}
+    table.code{min-width:0; font-size:14px}
+    .bank{padding:12px 16px}
+    .lamp{--size:clamp(46px, 14vh, 66px)}
+    .slot-plate{height:clamp(110px, 32vh, 150px)}
+    .lamp-cell{gap:6px}
+    .tape{min-height:40px; padding:6px 12px; font-size:13px}
+    .pilot i{width:16px; height:16px}
+    .next{font-size:16px; padding:8px 16px}
+    .intro .screen{min-height:0}
+    .i-sub{font-size:19px; min-height:3.6em}
+    .mapa{grid-template-columns:repeat(5, 32px); grid-auto-rows:32px}
+  }
+
+  /* botón ENTER: solo en pantallas táctiles (en la compu no aparece) */
+  .enter-btn{display:none}
+  @media (hover: none) and (pointer: coarse){
+    .enter-btn{
+      display:inline-flex; align-items:center; margin-left:auto; flex-shrink:0;
+      font:inherit; letter-spacing:.08em; color:var(--ph); text-shadow:inherit;
+      background:rgba(134,255,164,.08); border:1px solid var(--ph); border-radius:3px;
+      padding:1px 12px; cursor:pointer; -webkit-tap-highlight-color:transparent;
+    }
+    .enter-btn:active{background:var(--ph); color:var(--glass); text-shadow:none}
+  }
 
   /* foot */
   .foot{
@@ -479,22 +692,26 @@ html{box-sizing:border-box} body{margin:0} [hidden]{display:none!important} img{
 <main class="panel" id="panel">
   <i class="screw tl"></i><i class="screw tr"></i><i class="screw bl"></i><i class="screw br"></i>
 
-  <header class="head">
+  <aside class="side" aria-label="Estado del radar">
     <div class="maker">
       <small>Panel F · Laboratorio de cómputo</small>
       <h1>Consola Relé 70</h1>
     </div>
-    <div class="counter" aria-live="polite">
-      <span>Nivel</span>
-      <div class="drums" id="drums"><b class="drum">0</b><b class="drum">1</b></div>
+    <div class="scope-box">
+      <div class="scope" id="scope" data-mode="off" aria-hidden="true">
+        <div class="scope-glass"><i class="noise"></i><i class="sweep"></i><div class="blips" id="blips"></div></div>
+      </div>
     </div>
-  </header>
+    <p class="scope-read dead" id="scopeRead" aria-live="polite">RADAR SIN ENERGIA</p>
+    <ol class="checks" id="checks" aria-label="Reparaciones"></ol>
+  </aside>
 
-  <section class="stage" id="stage"></section>
+  <section class="work"><div class="stage" id="stage"></div></section>
 
   <footer class="foot">
     <span>Mod. 1947 · 110 V</span>
     <div class="switches">
+      <button class="sw" id="introBtn" type="button">Intro</button>
       <button class="sw" id="sound" type="button" aria-pressed="true">Sonido: sí</button>
       <button class="sw" id="reset" type="button">Reiniciar</button>
     </div>
@@ -542,7 +759,7 @@ html{box-sizing:border-box} body{margin:0} [hidden]{display:none!important} img{
   /* ---------- estado y persistencia ---------- */
   const KEY = "consola-rele70-v2";
   function load(){ try{ return JSON.parse(localStorage.getItem(KEY)) || {}; }catch(e){ return {}; } }
-  function save(){ try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){} }
+  function save(){ try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){} refreshStatus(); }
   let state = {};
 
   /* ---------- colores ---------- */
@@ -643,6 +860,155 @@ html{box-sizing:border-box} body{margin:0} [hidden]{display:none!important} img{
   /* Texto de la pantalla de cierre */
   const FIN_TEXTO = "La señal venía de ahí. El receptor vuelve a la calma y la consola Relé 70 queda en silencio.";
 
+  /* ---------- introducción narrada ----------
+     Si suben una grabación (por ejemplo intro.mp3 al lado del HTML en GitHub), pongan el nombre acá
+     y se usa esa. Vacío = la lee la voz del navegador (mujer, español latino si el equipo la tiene). */
+  const INTRO_AUDIO = "";
+  /* velocidad de la voz: 1 = normal, más alto = más rápido (por ejemplo 1.2) */
+  const INTRO_RATE = 1.1;
+  const INTRO_TEXT = [
+    "El búnker es una estación de investigación subterránea construida en los años cuarenta. Su propósito original fue estudiar las fallas de los primeros radares que participaron en la Segunda Guerra Mundial.",
+    "A lo largo de las décadas, tres mujeres pasaron por el búnker. Cada una llegó con una formación diferente, pero todas se enfrentaron al mismo problema.",
+    "En 1938, le pidieron a un grupo de matemáticos que resolvieran por qué los osciladores de los nuevos radares se comportaban de forma errática. Las ondas trazaban una y otra vez una forma casi idéntica, pero nunca lograban replicar con exactitud la anterior.",
+    "Mary Cartwright llegó a la conclusión de que el problema no estaba en cómo se fabricaban los equipos, sino en la propia naturaleza de las ondas. Un patrón que se repetía, pero nunca exactamente igual, y que nadie supo leer hasta mucho tiempo después.",
+    "Años más tarde, Grace Hopper encontró sus notas privadas. Comprendió que las ecuaciones de Cartwright describían aquellos comportamientos, pero carecía del conocimiento necesario para desarrollarlas. Sin embargo, descubrió algo igual de necesario. Entendió que el problema no solo consistía en captar las señales, sino también en traducirlas. Si las máquinas y los humanos hablaban lenguajes diferentes, hacía falta construir un puente entre ambos.",
+    "La tercera matemática, Margaret Hamilton, encontró ambos trabajos, los unió y terminó lo que las otras dos no lograron. Por primera vez, el sistema corrió completo, sin cortarse, y confirmó algo que se situaba bajo el nivel más profundo del búnker. Un nivel que, según los planos oficiales, no existe.",
+    "Ella vio lo que había ahí abajo. Y eligió desaparecer, sin decirle a nadie qué era. Solo dejó un diario que, hasta el momento, no había sido necesario interpretar.",
+    "El búnker fue clausurado y, con el tiempo, cayó en el olvido. Durante años permaneció en silencio, enterrado bajo capas de polvo y archivos olvidados.",
+    "Pero hace poco ocurrió algo imposible.",
+    "Sin intervención humana, el radar comenzó a detectar una interferencia.",
+    "Y por eso, hoy están acá."
+  ];
+  // frases en orden, marcando dónde termina cada párrafo (ahí la pausa es más larga)
+  const INTRO_LINES = INTRO_TEXT.flatMap(par => {
+    const fr = par.split(/(?<=[.!?])\s+/);
+    return fr.map((t,i)=>({ t, endPar: i === fr.length-1 }));
+  });
+
+  // elige la mejor voz femenina en español latino que tenga el equipo
+  function pickVoice(){
+    const vs = (window.speechSynthesis && speechSynthesis.getVoices()) || [];
+    const es = vs.filter(v => /^es([-_]|$)/i.test(v.lang));
+    if(!es.length) return null;
+    const FEM = /dalia|paloma|elena|paulina|sabina|ximena|valentina|salom|camila|renata|marisol|yolanda|catalina|larissa|beatriz|andrea|lupe|luciana|google espa(ñ|n)ol de estados unidos|female|mujer|femenin/i;
+    const MAS = /jorge|juan|diego|pablo|ra[uú]l|tom[aá]s|alonso|gerardo|carlos|enrique|andr[eé]s|jos[eé]|emilio|gonzalo|lorenzo|mateo|male|hombre|masculin/i;
+    const score = v => {
+      const n = v.name, l = v.lang.replace("_","-");
+      let sc = 0;
+      if(/es-(419|MX|US|AR|CO|CL|PE|UY|VE|EC|BO|PY|CR|DO|GT|HN|NI|PA|PR|SV|CU)/i.test(l)) sc += 40;
+      else if(/es-ES/i.test(l)) sc += 5;
+      if(/es-AR/i.test(l)) sc += 4;
+      if(FEM.test(n)) sc += 30;
+      if(MAS.test(n)) sc -= 60;
+      if(/natural|neural|online|premium|enhanced|mejorad/i.test(n)) sc += 12;
+      if(/google/i.test(n)) sc += 6;
+      return sc;
+    };
+    return es.sort((a,b)=>score(b)-score(a))[0];
+  }
+
+  function mountIntro(stage, done){
+    const box = $("div","crt intro");
+    box.innerHTML = `
+      <div class="crt-label"><span>Grabación recuperada · Búnker</span><span class="i-state">En espera</span></div>
+      <div class="screen">
+        <div class="intro-meta"><span>CINTA 01 . ARCHIVO DEL BUNKER</span><span class="i-count"></span></div>
+        <p class="i-sub" aria-live="polite">PULSE REPRODUCIR PARA ESCUCHAR LA TRANSMISION</p>
+        <div class="wave" aria-hidden="true">${"<i></i>".repeat(19)}</div>
+      </div>
+      <div class="intro-ctrls">
+        <button class="sw i-skip" type="button">Saltar introducción</button>
+        <button class="next i-play" type="button">▶ Reproducir</button>
+      </div>
+      <p class="intro-note" hidden></p>`;
+    stage.appendChild(box);
+    const sub = box.querySelector(".i-sub"), cnt = box.querySelector(".i-count"),
+          st = box.querySelector(".i-state"), play = box.querySelector(".i-play"),
+          skip = box.querySelector(".i-skip"), note = box.querySelector(".intro-note");
+    const total = INTRO_LINES.length;
+    let i = 0, running = false, timer = null, audio = null, ended = false;
+
+    const show = k => { sub.textContent = INTRO_LINES[k].t; cnt.textContent = `${String(k+1).padStart(2,"0")}/${total}`; };
+    const talking = on => box.classList.toggle("talking", on);
+    function stopAll(){
+      running = false; clearTimeout(timer); talking(false);
+      try{ window.speechSynthesis && speechSynthesis.cancel(); }catch(e){}
+      if(audio){ audio.pause(); }
+    }
+    function finish(){
+      stopAll(); ended = true;
+      st.textContent = "Fin de la grabación";
+      sub.textContent = INTRO_TEXT[INTRO_TEXT.length-1].toUpperCase();
+      play.textContent = "Encender la consola →";
+      skip.textContent = "Escuchar de nuevo";
+    }
+    function leave(){ stopAll(); done(); }
+
+    // modo 1: grabación (mp3); los subtítulos se reparten según el largo de cada frase
+    function playAudio(){
+      audio = audio || new Audio(INTRO_AUDIO);
+      const lens = INTRO_LINES.map(l=>l.t.length), sum = lens.reduce((a,b)=>a+b,0);
+      audio.ontimeupdate = ()=>{
+        if(!audio.duration) return;
+        let acc = 0, k = 0, f = audio.currentTime / audio.duration;
+        while(k < total-1 && (acc + lens[k]) / sum < f){ acc += lens[k]; k++; }
+        if(k !== i){ i = k; show(i); }
+      };
+      audio.onended = finish;
+      audio.onerror = ()=>{ audio = null; note.hidden = false; note.textContent = "No se encontró el archivo de audio; se usa la voz del navegador."; playVoice(); };
+      running = true; talking(true); st.textContent = "Reproduciendo"; show(i);
+      audio.play().catch(()=>{ audio.onerror && audio.onerror(); });
+    }
+    // modo 2: voz del navegador, frase por frase
+    function playVoice(){
+      const synth = window.speechSynthesis;
+      const voice = synth ? pickVoice() : null;
+      running = true; st.textContent = "Reproduciendo";
+      if(!voice){
+        note.hidden = false;
+        note.textContent = "Este navegador no tiene una voz en español instalada: la transmisión se muestra solo como texto.";
+      }else if(!/^es-(?!ES)/i.test(voice.lang.replace("_","-"))){
+        note.hidden = false;
+        note.textContent = `No hay una voz latina en este equipo; se usa “${voice.name}”. Para la voz ideal, abrí la página en Chrome o Edge.`;
+      }
+      const step = ()=>{
+        if(!running) return;
+        if(i >= total){ finish(); return; }
+        const line = INTRO_LINES[i]; show(i);
+        const next = ()=>{ if(!running) return; talking(false); i++; timer = setTimeout(step, line.endPar ? 500 : 150); };
+        if(!voice){ talking(false); timer = setTimeout(next, (900 + line.t.length * 55) / INTRO_RATE); return; }
+        const u = new SpeechSynthesisUtterance(line.t);
+        u.voice = voice; u.lang = voice.lang; u.rate = INTRO_RATE; u.pitch = 1;
+        u.onstart = ()=>talking(true);
+        u.onend = next; u.onerror = next;
+        synth.speak(u);
+      };
+      step();
+    }
+
+    play.addEventListener("click", ()=>{
+      if(ended){ leave(); return; }
+      if(running){
+        stopAll(); st.textContent = "En pausa"; play.textContent = "▶ Continuar"; return;
+      }
+      play.textContent = "❚❚ Pausa";
+      if(INTRO_AUDIO){ if(audio){ running = true; talking(true); st.textContent = "Reproduciendo"; audio.play(); } else playAudio(); }
+      else playVoice();
+    });
+    skip.addEventListener("click", ()=>{
+      if(ended){                        // escuchar de nuevo
+        ended = false; i = 0; if(audio) audio.currentTime = 0;
+        skip.textContent = "Saltar introducción"; play.textContent = "❚❚ Pausa";
+        INTRO_AUDIO && audio ? (running = true, talking(true), st.textContent = "Reproduciendo", audio.play()) : (INTRO_AUDIO ? playAudio() : playVoice());
+        return;
+      }
+      leave();
+    });
+    // precarga de voces (Chrome las entrega tarde)
+    try{ window.speechSynthesis && speechSynthesis.getVoices(); }catch(e){}
+    return stopAll;
+  }
+
   /* ---------- piezas compartidas ---------- */
   const $ = (tag, cls, html) => { const e=document.createElement(tag); if(cls) e.className=cls; if(html!=null) e.innerHTML=html; return e; };
   let tapeTimer = null;
@@ -659,9 +1025,66 @@ html{box-sizing:border-box} body{margin:0} [hidden]{display:none!important} img{
       if(i >= text.length) clearInterval(tapeTimer);
     }, 22);
   }
-  function setDrums(n){
-    const s = String(n).padStart(2,"0");
-    document.getElementById("drums").innerHTML = s.split("").map(d=>`<b class="drum">${d}</b>`).join("");
+  function setDrums(){ refreshStatus(); }
+
+  /* ---------- radar y estado de las reparaciones (panel lateral) ---------- */
+  const CHECKS = [
+    { name:"Alimentación" },
+    { name:"Traductor de tarjetas" },
+    { name:"Relés del panel F" },
+    { name:"Receptor" }
+  ];
+  const BLIPS = {
+    off:     [[.34,.40]],
+    noise:   [],
+    erratic: [[-.52,.22],[.30,-.55],[.62,.28],[-.18,-.42],[.08,.70],[-.66,-.20]],
+    signal:  [[.55,.35],[-.30,.62],[-.70,-.10],[.22,-.50],[.68,-.28],[-.45,-.55],[.05,.30]]
+  };
+  let lastMode = null;
+  function refreshStatus(){
+    const box = document.getElementById("checks");
+    if(!box) return;
+    const sv = [state.l1?.solved, state.l2?.solved, state.l3?.solved, state.l4?.solved].map(Boolean);
+    const cur = state.introDone ? Math.min(state.level || 0, 3) : -1;
+    const mode = sv[3] ? "found" : sv[2] ? "signal" : sv[1] ? "erratic" : sv[0] ? "noise" : "off";
+    const READ = { off:["RADAR SIN ENERGIA","dead"], noise:["SEÑAL ILEGIBLE","warn"], erratic:["LECTURAS ERRATICAS","warn"],
+                   signal:["INTERFERENCIA DETECTADA","warn"], found:["ORIGEN LOCALIZADO",""] }[mode];
+    const rd = document.getElementById("scopeRead");
+    rd.textContent = READ[0]; rd.className = "scope-read " + READ[1];
+
+    box.innerHTML = CHECKS.map((c,i)=>{
+      let cls, st;
+      if(i < 3){
+        if(sv[i]){ cls="ck-ok"; st="Reparado"; }
+        else if(i === cur){ cls="ck-fix"; st="En reparación"; }
+        else { cls="ck-bad"; st="Falla"; }
+      }else{
+        if(sv[3]){ cls="ck-ok"; st="Origen hallado"; }
+        else if(sv[2]){ cls="ck-fix"; st="Recibiendo señal"; }
+        else { cls="ck-off"; st="Sin señal"; }
+      }
+      // los sistemas que todavía no se alcanzaron no muestran su nombre
+      const known = sv[i] || (i < 3 ? i <= cur : sv[2]);
+      return `<li class="${cls}"><i class="led"></i><span class="ck-name">${known ? c.name : "— — —"}</span><span class="ck-st">${st}</span></li>`;
+    }).join("");
+
+    if(mode !== lastMode){
+      lastMode = mode;
+      const sc = document.getElementById("scope");
+      sc.dataset.mode = mode;
+      let pts = BLIPS[mode] || [];
+      if(mode === "found"){
+        const D = (typeof NIVEL4 !== "undefined") && NIVEL4[state.m|0];
+        pts = D ? [[D.origen[0]/22, D.origen[1]/22]] : [];
+      }
+      const T = mode === "erratic" ? 5.5 : 4;
+      document.getElementById("blips").innerHTML = pts.map(([x,y],k)=>{
+        // en modo señal, cada eco se enciende cuando el barrido pasa por su ángulo
+        const ang = (Math.atan2(x, y) * 180 / Math.PI + 360) % 360;
+        const d = mode === "signal" ? (ang/360)*T : k*0.37;
+        return `<b class="blip" style="--x:${x};--y:${y};--d:${d.toFixed(2)}s"></b>`;
+      }).join("");
+    }
   }
   function makeLever(onPull){
     const wrap = $("div","lever");
@@ -727,7 +1150,7 @@ html{box-sizing:border-box} body{margin:0} [hidden]{display:none!important} img{
   /* ---------- niveles ---------- */
   const LEVELS = [
     {
-      name: "Nivel 1 · Secuencia de encendido",
+      name: "Alimentación · Secuencia de encendido",
       mount(stage, api){
                 const lv = state.l1 = state.l1 || { lamps:[-1,-1,-1,-1], solved:false };
 
@@ -767,10 +1190,10 @@ html{box-sizing:border-box} body{margin:0} [hidden]{display:none!important} img{
         let nextBtn = null;
         function showNext(){
           if(nextBtn) return;
-          nextBtn = $("button","next","Siguiente nivel →");
+          nextBtn = $("button","next","Continuar →");
           nextBtn.type = "button";
           nextBtn.addEventListener("click", ()=>{ sfx.click(); api.advance(); });
-          stage.appendChild(nextBtn);
+          readout.appendChild(nextBtn);
         }
 
         const WAIT_MS = 10000;
@@ -839,7 +1262,7 @@ html{box-sizing:border-box} body{margin:0} [hidden]{display:none!important} img{
       }
     },
     {
-      name: "Nivel 2 · Módulo de sentencias",
+      name: "Traductor · Módulo de sentencias",
       mount(stage, api){
         const SENTENCES = BLOCKS[state.m|0];
         const BOOT = [
@@ -866,10 +1289,13 @@ html{box-sizing:border-box} body{margin:0} [hidden]{display:none!important} img{
         const crt = $("div","crt");
         crt.innerHTML = `
           <div class="crt-label"><span>Terminal · Módulo 2</span><span>Fósforo P1</span></div>
-          <div class="screen">
-            <div class="code-title"><span>TABLA DE CODIFICACION</span><span>ZONA x DIGITO</span></div>
-            <div class="code-wrap">${tableHTML}</div>
-            <hr class="rule">
+          <div class="screen split">
+            <div class="pane-a">
+              <div class="code-title"><span>TABLA DE CODIFICACION</span><span>ZONA x DIGITO</span></div>
+              <div class="code-wrap">${tableHTML}</div>
+            </div>
+            <hr class="rule split-rule">
+            <div class="pane-b">
             <div class="term" aria-live="polite"></div>
             <label class="prompt" hidden>
               <span class="ps"></span>
@@ -877,6 +1303,7 @@ html{box-sizing:border-box} body{margin:0} [hidden]{display:none!important} img{
             </label>
             <hr class="rule">
             <div class="progress" aria-label="Sentencias cargadas"></div>
+            </div>
           </div>`;
         const screen = crt.querySelector(".screen");
         const term = crt.querySelector(".term");
@@ -920,7 +1347,7 @@ html{box-sizing:border-box} body{margin:0} [hidden]{display:none!important} img{
           lv.solved = true; save(); drawProgress();
           prompt.hidden = true; light("ok");
           if(!nextBtn){
-            nextBtn = $("button","next","Siguiente nivel →"); nextBtn.type = "button";
+            nextBtn = $("button","next","Continuar →"); nextBtn.type = "button";
             nextBtn.addEventListener("click", ()=>{ sfx.click(); api.advance(); });
             foot.appendChild(nextBtn);
           }
@@ -946,7 +1373,7 @@ html{box-sizing:border-box} body{margin:0} [hidden]{display:none!important} img{
             if(ok){
               sfx.ok();
               line("PROGRAMA DE ACCESO COMPLETO", "");
-              line("ACCESO CONCEDIDO . CARGANDO NIVEL 3", "");
+              line("ACCESO CONCEDIDO . TRADUCTOR EN LINEA", "");
               finish();
             }else{
               sfx.bad(); light("bad");
@@ -978,7 +1405,7 @@ html{box-sizing:border-box} body{margin:0} [hidden]{display:none!important} img{
       }
     },
     {
-      name: "Nivel 3 · Bichos en el panel F",
+      name: "Panel F · Bichos en los relés",
       mount(stage, api){
         /* Datos del nivel "Panel F" (solución única, verificada por fuerza bruta).
            Relés 0..8 = 1.1 .. 3.3. Caras del borde en el orden de CARA. */
@@ -1059,18 +1486,22 @@ html{box-sizing:border-box} body{margin:0} [hidden]{display:none!important} img{
         const crt = $("div","crt");
         crt.innerHTML = `
           <div class="crt-label"><span>Terminal · Módulo 3 · Diagnóstico</span><span class="alarm-tag"></span></div>
-          <div class="screen">
-            <div class="alerta"></div>
-            <div class="falla" hidden>
-              <div class="mapa" aria-label="Mapa del panel F">${map}</div>
-              <div>${datos}</div>
+          <div class="screen split s3">
+            <div class="pane-a" hidden>
+              <div class="falla" hidden>
+                <div class="mapa" aria-label="Mapa del panel F">${map}</div>
+                <div>${datos}</div>
+              </div>
             </div>
+            <div class="pane-b">
+            <div class="alerta"></div>
             <hr class="rule">
             <div class="term t3" aria-live="polite"></div>
             <label class="prompt" hidden>
               <span class="ps"></span>
               <input id="term3-in" type="text" autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false" maxlength="24" aria-label="Dato del programa">
             </label>
+            </div>
           </div>`;
         const screen = crt.querySelector(".screen");
         const alerta = crt.querySelector(".alerta");
@@ -1136,7 +1567,7 @@ html{box-sizing:border-box} body{margin:0} [hidden]{display:none!important} img{
           if(typeof lever !== "undefined" && lever) lever.lock(true);
           light("ok");
           if(!nextBtn){
-            nextBtn = $("button","next","Siguiente nivel →"); nextBtn.type = "button";
+            nextBtn = $("button","next","Continuar →"); nextBtn.type = "button";
             nextBtn.addEventListener("click", ()=>{ sfx.click(); api.advance(); });
             foot.appendChild(nextBtn);
           }
@@ -1273,7 +1704,7 @@ html{box-sizing:border-box} body{margin:0} [hidden]{display:none!important} img{
           ? "ARME EL PROGRAMA EN EL TABLERO, COPIELO EN LAS PERILLAS Y BAJE LA PALANCA."
           : "ARME EL PROGRAMA EN EL TABLERO Y CARGUELO ACA. ESCRIBA BORRAR PARA EMPEZAR DE NUEVO.";
         function ready(){
-          falla.hidden = false;
+          falla.hidden = false; falla.parentElement.hidden = false;
           if(lv.solved){ finish(); return; }
           if(INPUT_MODE==="terminal") ask();
         }
@@ -1304,13 +1735,13 @@ html{box-sizing:border-box} body{margin:0} [hidden]{display:none!important} img{
       }
     },
     {
-      name: "Nivel 4 · Origen de la vibración",
+      name: "Receptor · Origen de la vibración",
       mount(stage){
         const D = NIVEL4[state.m|0];
         if(!D){
           const w = $("div","wip",
-            `<strong>Nivel 4 en construcción</strong>
-             <p>Los datos de este nivel para su mariposa todavía no están cargados. Cuando estén, aparece acá sin perder el progreso.</p>`);
+            `<strong>Receptor en construcción</strong>
+             <p>Los datos del receptor para su mariposa todavía no están cargados. Cuando estén, aparece acá sin perder el progreso.</p>`);
           stage.appendChild(w);
           return;
         }
@@ -1327,20 +1758,24 @@ html{box-sizing:border-box} body{margin:0} [hidden]{display:none!important} img{
         const crt = $("div","crt");
         crt.innerHTML = `
           <div class="crt-label"><span>Terminal · Módulo 4</span><span class="alarm-tag"></span></div>
-          <div class="screen">
+          <div class="screen split">
+            <div class="pane-a" hidden>
             <div class="vib-panel" hidden>
               <div class="code-title"><span>LISTA DE VIBRACIONES</span><span>1 UNIDAD = 1000 KM</span></div>
               <ol class="vib">${D.lista.map((p,i)=>`<li><span>${String(i+1).padStart(2,"0")} </span>${pad(p)}</li>`).join("")}</ol>
               <div class="radio" hidden></div>
             </div>
-            <hr class="rule vib-rule" hidden>
+            </div>
+            <hr class="rule vib-rule split-rule" hidden>
+            <div class="pane-b">
             <div class="term" aria-live="polite"></div>
             <label class="prompt" hidden>
               <span class="ps"></span>
               <input type="text" autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false" maxlength="60" aria-label="Respuesta">
             </label>
             <hr class="rule">
-            <div class="progress" aria-label="Avance del nivel 4"></div>
+            <div class="progress" aria-label="Avance del receptor"></div>
+            </div>
           </div>`;
         const screen = crt.querySelector(".screen");
         const panel = crt.querySelector(".vib-panel");
@@ -1377,10 +1812,10 @@ html{box-sizing:border-box} body{margin:0} [hidden]{display:none!important} img{
           tag.classList.toggle("on", sat);
         }
         function showPanel(){
-          panel.hidden = false; vibRule.hidden = false;
+          panel.hidden = false; vibRule.hidden = false; panel.parentElement.hidden = false;
           if(lv.phase === "origen" || lv.phase === "fin"){
             radioBox.hidden = false;
-            radioBox.textContent = `RADIO DE TRAZADO: ${D.radio}`;
+            radioBox.textContent = `ERROR DEL RECEPTOR: ${D.radio}`;
           }
         }
         function drawProgress(){
@@ -1389,7 +1824,7 @@ html{box-sizing:border-box} body{margin:0} [hidden]{display:none!important} img{
           let extra = "";
           if(lv.phase === "puntos") extra = "CARGADOS: " + (lv.entries.length ? lv.entries.map(fmt).join(" ") : "NINGUNO");
           if(lv.phase === "clave")  extra = "ESPERANDO CLAVE";
-          if(lv.phase === "origen") extra = `RADIO ${D.radio}`;
+          if(lv.phase === "origen") extra = "";
           prog.innerHTML = `FASE <b class="${f1}">1</b><b class="${f2}">2</b><span>${extra}</span>`;
         }
         function ask(){
@@ -1424,7 +1859,7 @@ html{box-sizing:border-box} body{margin:0} [hidden]{display:none!important} img{
         function revealRadio(){
           lv.phase = "origen"; save();
           setTag(); showPanel(); drawProgress();
-          line(`TRACE CIRCUNFERENCIAS DE RADIO ${D.radio}`, "");
+          line(`ERROR DEL RECEPTOR: ${D.radio}`, "");
           line("UBIQUE EL ORIGEN DE LA VIBRACION E INGRESELO COMO X,Y", "");
           ask();
         }
@@ -1565,10 +2000,18 @@ html{box-sizing:border-box} body{margin:0} [hidden]{display:none!important} img{
   ];
 
   /* ---------- motor ---------- */
+  let stopIntro = null;
   function render(){
     const stage = document.getElementById("stage");
+    if(stopIntro){ stopIntro(); stopIntro = null; }
     stage.innerHTML = "";
     clearInterval(tapeTimer);
+    if(!state.introDone){
+      setDrums(0);
+      stage.appendChild($("div","level-name","Transmisión entrante"));
+      stopIntro = mountIntro(stage, ()=>{ state.introDone = true; save(); render(); });
+      return;
+    }
     const i = Math.min(state.level || 0, LEVELS.length-1);
     const L = LEVELS[i];
     setDrums(i+1);
@@ -1576,7 +2019,36 @@ html{box-sizing:border-box} body{margin:0} [hidden]{display:none!important} img{
     L.mount(stage, {
       advance(){ state.level = i+1; save(); render(); }
     });
+    addEnterButtons(stage);
   }
+
+  /* ENTER en las terminales: botón para celular y respaldo para teclados que no mandan bien el Enter */
+  function pressEnter(input){
+    if(!input || input.disabled) return;
+    input.dispatchEvent(new KeyboardEvent("keydown", { key:"Enter", code:"Enter", keyCode:13, bubbles:true, cancelable:true }));
+  }
+  function addEnterButtons(root){
+    root.querySelectorAll(".prompt").forEach(p=>{
+      const input = p.querySelector("input");
+      if(!input) return;
+      input.setAttribute("enterkeyhint", "send");
+      if(p.querySelector(".enter-btn")) return;
+      const b = $("button", "enter-btn", "ENTER");
+      b.type = "button";
+      b.setAttribute("aria-label", "Enviar");
+      b.addEventListener("pointerdown", e => e.preventDefault());   // no cierra el teclado
+      b.addEventListener("click", e => { e.preventDefault(); pressEnter(input); input.focus({preventScroll:true}); });
+      p.appendChild(b);
+    });
+  }
+  let sawDown = false;
+  document.addEventListener("keydown", e => { if(e.key === "Enter") sawDown = true; }, true);
+  document.addEventListener("keyup", e => {
+    const t = e.target;
+    if(!(e.key === "Enter" || e.keyCode === 13)) return;
+    const missed = !sawDown; sawDown = false;
+    if(missed && t instanceof HTMLInputElement && t.closest(".prompt")) pressEnter(t);
+  }, true);
 
   /* ---------- controles del pie ---------- */
   const soundBtn = document.getElementById("sound");
@@ -1584,6 +2056,9 @@ html{box-sizing:border-box} body{margin:0} [hidden]{display:none!important} img{
     soundOn = !soundOn; state.sound = soundOn; save();
     soundBtn.textContent = "Sonido: " + (soundOn ? "sí" : "no");
     soundBtn.setAttribute("aria-pressed", String(soundOn));
+  });
+  document.getElementById("introBtn").addEventListener("click", ()=>{
+    sfx.click(); state.introDone = false; save(); render();
   });
   const resetBtn = document.getElementById("reset");
   let armed = null;
