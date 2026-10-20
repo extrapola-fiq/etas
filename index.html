@@ -777,8 +777,29 @@ html{box-sizing:border-box} body{margin:0} [hidden]{display:none!important} img{
   /* Las 8 mariposas: cada combinación de lámparas (nivel 1) lleva a un bloque de
      4 sentencias (nivel 2) y a un panel con una única solución (nivel 3).
      El índice es el mismo en las tres tablas. */
-  const COMBOS = [["violeta","azul","amarillo","fucsia"],["fucsia","amarillo","azul","violeta"],["naranja","marrón","verde","negro"],["negro","verde","marrón","naranja"],["verde","negro","naranja","marrón"],["marrón","naranja","negro","verde"],["azul","violeta","fucsia","amarillo"],["amarillo","fucsia","violeta","azul"]];
-  const BLOCKS = [["SET","ADD","MOVE","TEST"],["TEST","MOVE","ADD","SET"],["COMPARE","INPUT","JUMP","OUTPUT"],["OUTPUT","JUMP","INPUT","COMPARE"],["JUMP","OUTPUT","COMPARE","INPUT"],["INPUT","COMPARE","OUTPUT","JUMP"],["ADD","SET","TEST","MOVE"],["MOVE","TEST","SET","ADD"]];
+  /* combinación de lámparas de cada mariposa (índice 0 = mariposa 1) */
+  const COMBOS = [
+    ["marrón","verde","negro","naranja"],     // mariposa 1
+    ["verde","marrón","naranja","negro"],     // mariposa 2
+    ["azul","amarillo","fucsia","violeta"],   // mariposa 3
+    ["amarillo","azul","violeta","fucsia"],   // mariposa 4
+    ["negro","naranja","fucsia","violeta"],   // mariposa 5
+    ["naranja","negro","violeta","fucsia"],   // mariposa 6
+    ["marrón","verde","azul","amarillo"],     // mariposa 7
+    ["verde","marrón","amarillo","azul"]      // mariposa 8
+  ];
+  /* sentencias del traductor (marrón=INPUT, negro=OUTPUT, fucsia=TEST, amarillo=MOVE,
+     azul=ADD, violeta=SET, naranja=COMPARE, verde=JUMP) */
+  const BLOCKS = [
+    ["INPUT","JUMP","OUTPUT","COMPARE"],      // mariposa 1
+    ["JUMP","INPUT","COMPARE","OUTPUT"],      // mariposa 2
+    ["ADD","MOVE","TEST","SET"],              // mariposa 3
+    ["MOVE","ADD","SET","TEST"],              // mariposa 4
+    ["OUTPUT","COMPARE","TEST","SET"],       // mariposa 5
+    ["COMPARE","OUTPUT","SET","TEST"],       // mariposa 6
+    ["INPUT","JUMP","ADD","MOVE"],           // mariposa 7
+    ["JUMP","INPUT","MOVE","ADD"]            // mariposa 8
+  ];
   const PUZZLES = [
     /* mariposa 1 */ {
       ini:{M:0, G:1, V:2},
