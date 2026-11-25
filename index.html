@@ -1234,8 +1234,7 @@ html{box-sizing:border-box} body{margin:0} [hidden]{display:none!important} img{
   }
   function makeLever(onPull){
     const wrap = $("div","lever");
-    wrap.innerHTML = `<span class="tag">Enter</span>
-      <div class="slot-plate"><div class="slot"></div>
+    wrap.innerHTML = `<div class="slot-plate"><div class="slot"></div>
         <button class="handle" type="button" aria-label="Bajar la palanca para comprobar"></button>
       </div>
       <span class="hint">Bajá la palanca para comprobar</span>`;
@@ -1301,8 +1300,7 @@ html{box-sizing:border-box} body{margin:0} [hidden]{display:none!important} img{
     const lamps = $("div","lamps");
     const cells = [0,1,2,3].map(k=>{
       const cell = $("div","lamp-cell");
-      cell.innerHTML = `<span class="tag">L${k+1}</span>
-        <button class="lamp" type="button"><span class="glass"></span></button>
+      cell.innerHTML = `<button class="lamp" type="button"><span class="glass"></span></button>
         <span class="name"></span>`;
       cell.querySelector(".lamp").addEventListener("click", ()=>{
         if(!api.canEdit()) return;
