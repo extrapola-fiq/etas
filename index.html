@@ -237,7 +237,7 @@ html{box-sizing:border-box} body{margin:0} [hidden]{display:none!important} img{
     display:grid; grid-template-columns:auto 1fr; gap:16px; align-items:center;
   }
   .pilots{display:flex; gap:14px}
-  .pilot{display:flex; flex-direction:column; align-items:center; gap:6px}
+  .pilot{display:flex; flex-direction:column; align-items:center; gap:12px}
   .pilot i{
     display:block; width:22px; height:22px; border-radius:50%;
     background:radial-gradient(circle at 35% 30%, rgba(255,255,255,.2) 0 12%, #2b2d28 40%, #121310);
@@ -256,18 +256,22 @@ html{box-sizing:border-box} body{margin:0} [hidden]{display:none!important} img{
   .tape{
     min-height:52px;
     display:flex; align-items:center;
-    padding:10px 16px;
+    padding:10px 18px;
+    /* pantallita de fósforo verde, sin cursor */
     background:
-      repeating-linear-gradient(180deg, transparent 0 23px, rgba(80,60,20,.08) 23px 24px),
-      linear-gradient(180deg,#f3ead3,var(--plate));
-    color:var(--plate-ink);
-    font-size:clamp(14px,2.4vw,16px);
-    line-height:1.4;
-    border-radius:2px;
-    box-shadow:inset 0 0 0 1px rgba(0,0,0,.15), 0 3px 6px rgba(0,0,0,.45);
+      repeating-linear-gradient(180deg, rgba(0,0,0,.22) 0 1px, transparent 1px 3px),
+      radial-gradient(120% 160% at 50% 40%, #0d2a19 0%, #04140b 70%, #020a05 100%);
+    color:#86ffa4; text-shadow:0 0 6px rgba(134,255,164,.55);
+    font-family:"VT323","Courier New",monospace;
+    font-size:clamp(17px,2.6vw,21px);
+    letter-spacing:.04em; text-transform:uppercase;
+    line-height:1.3;
+    border-radius:10px;
+    box-shadow:inset 0 0 18px rgba(0,0,0,.85), 0 0 0 3px #1a1c18, 0 0 0 5px var(--brass-lo), 0 4px 8px rgba(0,0,0,.5);
     overflow-wrap:anywhere;
   }
-  .tape .cursor{display:inline-block; width:.6em; margin-left:2px; animation:blink 1s steps(1) infinite}
+  .tape.bad{color:#ffb86b; text-shadow:0 0 6px rgba(255,160,80,.6)}
+  .tape .cursor{display:none}
   @keyframes blink{50%{opacity:0}}
 
   .next{
@@ -353,7 +357,18 @@ html{box-sizing:border-box} body{margin:0} [hidden]{display:none!important} img{
   .alerta .err, .t3 .err{color:#ffb86b; text-shadow:0 0 6px rgba(255,160,80,.6)}
   .alerta .dim, .t3 .dim, .datos .dim, .sens .dim{opacity:.6}
   .t3{height:clamp(120px,22vw,170px)}
-  .falla{display:grid; grid-template-columns:auto 1fr; gap:clamp(14px,3vw,26px); align-items:center}
+  .info3{display:flex; flex-direction:column; gap:14px}
+  .tabla2{display:flex; flex-direction:column; gap:8px; animation:sqIn .35s ease both}
+  .tabla2[hidden]{display:none}
+  .info3 .sq{display:none}
+  .info3 .sq.on{display:block; animation:sqIn .35s ease both}
+  .info3 .mapa.sq.on{display:grid}
+  @keyframes sqIn{from{opacity:0}to{opacity:1}}
+  .esquema{display:flex; flex-direction:column; gap:8px}
+  .esquema p{margin:0}
+  .info3 .sens{margin-top:0}
+  .screen.s3seq{overflow-y:auto; scrollbar-width:thin; scrollbar-color:var(--ph-faint) transparent}
+  .crt > .screen.s3seq > .term.t3{height:auto; min-height:0; overflow:visible; flex:none}
   .mapa{display:grid; grid-template-columns:repeat(5, clamp(30px,6.4vw,44px)); grid-auto-rows:clamp(30px,6.4vw,44px); gap:2px}
   .mapa .rl{border:1px solid var(--ph-dim); display:flex; flex-direction:column; align-items:center; justify-content:center; line-height:1}
   .mapa .rl small{font-size:.62em; opacity:.6}
@@ -440,6 +455,23 @@ html{box-sizing:border-box} body{margin:0} [hidden]{display:none!important} img{
   .i-sub{margin:0 auto; max-width:34ch; min-height:4.2em; display:flex; align-items:center; justify-content:center;
        text-align:center; text-wrap:balance; font-size:clamp(21px,3.6vw,29px); line-height:1.25}
   .wave{display:flex; justify-content:center; align-items:flex-end; gap:4px; height:26px}
+  .lyrics{flex:1 1 auto; min-height:0; max-height:clamp(150px, 42vh, 420px); overflow-y:auto; position:relative;
+    padding:6px 6px 6px 0; scrollbar-width:thin; scrollbar-color:var(--ph-faint) transparent;
+    -webkit-mask-image:linear-gradient(180deg, transparent, #000 7%, #000 93%, transparent); mask-image:linear-gradient(180deg, transparent, #000 7%, #000 93%, transparent)}
+  .ly{display:block; width:100%; text-align:left; font:inherit; font-size:1.35em; line-height:1.3; color:inherit; text-shadow:inherit;
+    background:none; border:0; border-radius:4px; padding:3px 8px; cursor:pointer; opacity:.5; transition:opacity .25s ease, background .25s ease}
+  .ly.par{margin-bottom:.75em}
+  .ly:hover, .ly:focus-visible{opacity:.9; background:rgba(134,255,164,.07); outline:none}
+  .intro.lyr:not(.ended) .ly{opacity:.38}
+  .intro.lyr:not(.ended) .ly:hover{opacity:.8}
+  .intro.lyr .ly.cur{opacity:1; color:#d2ffdc; text-shadow:0 0 10px rgba(134,255,164,.9)}
+  .intro.ended .ly{opacity:.85}
+  .intro.lyr .wave{height:12px}
+  .ly.pend{display:none}
+  .caret{display:inline-block; width:.55em; height:1em; margin-left:2px; vertical-align:-.12em; background:currentColor; box-shadow:0 0 8px rgba(134,255,164,.8); animation:blink .7s steps(1) infinite}
+  /* mientras se tipea, el texto va subiendo a medida que aparecen frases nuevas */
+  .intro.crawl .lyrics{scrollbar-width:none}
+  .intro.crawl .lyrics::-webkit-scrollbar{display:none}
   .wave i{width:5px; height:4px; background:var(--ph); box-shadow:0 0 6px rgba(134,255,164,.6); opacity:.5}
   .intro.talking .wave i{animation:vu .9s ease-in-out infinite alternate; opacity:.95}
   .wave i:nth-child(3n){animation-delay:-.3s} .wave i:nth-child(4n+1){animation-delay:-.55s} .wave i:nth-child(5n+2){animation-delay:-.75s}
@@ -595,9 +627,10 @@ html{box-sizing:border-box} body{margin:0} [hidden]{display:none!important} img{
     .crt{padding:10px 12px; gap:6px}
     .screen{padding:12px 16px; gap:10px}
     .pilot i{width:18px; height:18px}
-    .pilot{gap:3px}
+    .pilot{gap:9px}
     .bank{padding:16px 22px}
     .intro .screen{min-height:0}
+    .intro .lyrics{max-height:none; flex:1 1 0}
     .mapa{grid-template-columns:repeat(5, clamp(28px, 5.4vh, 44px)); grid-auto-rows:clamp(28px, 5.4vh, 44px)}
   }
   /* --- celular acostado: compacto, el área de trabajo se desplaza sola --- */
@@ -629,7 +662,7 @@ html{box-sizing:border-box} body{margin:0} [hidden]{display:none!important} img{
     .lamp{--size:clamp(46px, 14vh, 66px)}
     .slot-plate{height:clamp(110px, 32vh, 150px)}
     .lamp-cell{gap:6px}
-    .tape{min-height:40px; padding:6px 12px; font-size:13px}
+    .tape{min-height:40px; padding:6px 12px; font-size:16px}
     .pilot i{width:16px; height:16px}
     .next{font-size:16px; padding:8px 16px}
     .intro .screen{min-height:0}
@@ -694,7 +727,7 @@ html{box-sizing:border-box} body{margin:0} [hidden]{display:none!important} img{
 
   <aside class="side" aria-label="Estado del radar">
     <div class="maker">
-      <small>Panel F · Laboratorio de cómputo</small>
+      <small>Laboratorio de cómputo</small>
       <h1>Consola Relé 70</h1>
     </div>
     <div class="scope-box">
@@ -872,7 +905,7 @@ html{box-sizing:border-box} body{margin:0} [hidden]{display:none!important} img{
   /* Clave del facilitador antes de revelar el radio. Vacía = no se pide. Ejemplo: "ORION" */
   const CLAVE_L4 = "";
   /* Texto de la pantalla de cierre */
-  const FIN_TEXTO = "La señal venía de ahí. El receptor vuelve a la calma y la consola Relé 70 queda en silencio.";
+  const FIN_TEXTO = "La señal venía de ahí. El receptor vuelve a la calma y la consola queda en silencio.";
 
   /* ---------- introducción narrada ----------
      Si suben una grabación (por ejemplo intro.mp3 al lado del HTML en GitHub), pongan el nombre acá
@@ -881,17 +914,12 @@ html{box-sizing:border-box} body{margin:0} [hidden]{display:none!important} img{
   /* velocidad de la voz: 1 = normal, más alto = más rápido (por ejemplo 1.2) */
   const INTRO_RATE = 1.1;
   const INTRO_TEXT = [
-    "El búnker es una estación de investigación subterránea construida en los años cuarenta. Su propósito original fue estudiar las fallas de los primeros radares que participaron en la Segunda Guerra Mundial.",
-    "A lo largo de las décadas, tres mujeres pasaron por el búnker. Cada una llegó con una formación diferente, pero todas se enfrentaron al mismo problema.",
-    "En 1938, le pidieron a un grupo de matemáticos que resolvieran por qué los osciladores de los nuevos radares se comportaban de forma errática. Las ondas trazaban una y otra vez una forma casi idéntica, pero nunca lograban replicar con exactitud la anterior.",
-    "Mary Cartwright llegó a la conclusión de que el problema no estaba en cómo se fabricaban los equipos, sino en la propia naturaleza de las ondas. Un patrón que se repetía, pero nunca exactamente igual, y que nadie supo leer hasta mucho tiempo después.",
-    "Años más tarde, Grace Hopper encontró sus notas privadas. Comprendió que las ecuaciones de Cartwright describían aquellos comportamientos, pero carecía del conocimiento necesario para desarrollarlas. Sin embargo, descubrió algo igual de necesario. Entendió que el problema no solo consistía en captar las señales, sino también en traducirlas. Si las máquinas y los humanos hablaban lenguajes diferentes, hacía falta construir un puente entre ambos.",
-    "La tercera matemática, Margaret Hamilton, encontró ambos trabajos, los unió y terminó lo que las otras dos no lograron. Por primera vez, el sistema corrió completo, sin cortarse, y confirmó algo que se situaba bajo el nivel más profundo del búnker. Un nivel que, según los planos oficiales, no existe.",
-    "Ella vio lo que había ahí abajo. Y eligió desaparecer, sin decirle a nadie qué era. Solo dejó un diario que, hasta el momento, no había sido necesario interpretar.",
-    "El búnker fue clausurado y, con el tiempo, cayó en el olvido. Durante años permaneció en silencio, enterrado bajo capas de polvo y archivos olvidados.",
-    "Pero hace poco ocurrió algo imposible.",
-    "Sin intervención humana, el radar comenzó a detectar una interferencia.",
-    "Y por eso, hoy están acá."
+    "Si estás escuchando esto, es porque el radar volvió a captar la interferencia. Soy Margaret Hamilton y yo también la escuché, hace mucho.",
+    "Este lugar se construyó para entender por qué fallaban los radares de la guerra. Por acá pasamos 3 mujeres, cada cual con su formación. Mary Cartwright descubrió que la falla no estaba en los equipos sino en las ondas mismas. Algunos patrones se repetían, pero nunca iguales. Luego de 2 décadas, Grace Hopper encontró sus notas y entendió que faltaba otra cosa: que la máquina y las personas hablaran el mismo idioma.",
+    "Yo dediqué 9 años a juntar el trabajo de ambas. Cuando la consola por fin corrió completa, me mostró lo que hay debajo del último nivel, ese que no figura en ningún plano. No voy a escribir lo que vi. Solo les digo que, cuando la encendí, algo respondió desde abajo.",
+    "Por eso guardé todo el instrumental en la caja y la cerré con candado. Sólo les pido que no enciendan la consola.",
+    "Pero si el radar volvió a sonar, quizás ya no quede otra opción. Si deciden seguir, ya tienen todo lo que necesitan para abrir la caja. Mi diario les va a enseñar el resto.",
+    "Tengan cuidado. Lo que hay ahí abajo también escucha."
   ];
   // frases en orden, marcando dónde termina cada párrafo (ahí la pausa es más larga)
   const INTRO_LINES = INTRO_TEXT.flatMap(par => {
@@ -926,8 +954,9 @@ html{box-sizing:border-box} body{margin:0} [hidden]{display:none!important} img{
     box.innerHTML = `
       <div class="crt-label"><span>Grabación recuperada · Búnker</span><span class="i-state">En espera</span></div>
       <div class="screen">
-        <div class="intro-meta"><span>CINTA 01 . ARCHIVO DEL BUNKER</span><span class="i-count"></span></div>
+        <div class="intro-meta"><span class="i-meta">CINTA 01 . ARCHIVO DEL BUNKER</span><span class="i-count"></span></div>
         <p class="i-sub" aria-live="polite">PULSE REPRODUCIR PARA ESCUCHAR LA TRANSMISION</p>
+        <div class="lyrics" hidden>${INTRO_LINES.map((l,k)=>`<button type="button" class="ly pend${l.endPar ? " par" : ""}" data-k="${k}">${l.t}</button>`).join("")}</div>
         <div class="wave" aria-hidden="true">${"<i></i>".repeat(19)}</div>
       </div>
       <div class="intro-ctrls">
@@ -938,45 +967,104 @@ html{box-sizing:border-box} body{margin:0} [hidden]{display:none!important} img{
     stage.appendChild(box);
     const sub = box.querySelector(".i-sub"), cnt = box.querySelector(".i-count"),
           st = box.querySelector(".i-state"), play = box.querySelector(".i-play"),
-          skip = box.querySelector(".i-skip"), note = box.querySelector(".intro-note");
+          skip = box.querySelector(".i-skip"), note = box.querySelector(".intro-note"),
+          lyr = box.querySelector(".lyrics"), meta = box.querySelector(".i-meta");
+    const lines = [...lyr.children];
     const total = INTRO_LINES.length;
-    let i = 0, running = false, timer = null, audio = null, ended = false;
+    const lens = INTRO_LINES.map(l=>l.t.length), sum = lens.reduce((a,b)=>a+b,0);
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    let i = 0, running = false, timer = null, audio = null, ended = false, gen = 0;
+    let lyricMode = false, heardAll = false, revealed = -1;
+    let typeTimer = null, typing = -1, bnd = 0;
+    const caret = $("span","caret");
 
-    const show = k => { sub.textContent = INTRO_LINES[k].t; cnt.textContent = `${String(k+1).padStart(2,"0")}/${total}`; };
+    /* ---- texto tipeado mientras suena (primera escucha), con efecto de "crawl" ---- */
+    function follow(el, smooth){
+      const top = heardAll ? el.offsetTop - lyr.clientHeight/3 : el.offsetTop + el.offsetHeight - lyr.clientHeight*0.82;
+      lyr.scrollTo({ top: Math.max(0, top), behavior: smooth && !reduce ? "smooth" : "auto" });
+    }
+    function endTyping(){
+      clearInterval(typeTimer); typeTimer = null;
+      if(typing >= 0){ lines[typing].textContent = INTRO_LINES[typing].t; revealed = Math.max(revealed, typing); typing = -1; }
+    }
+    function startTyping(k, ms){
+      endTyping();
+      const el = lines[k], full = INTRO_LINES[k].t, t0 = performance.now();
+      el.classList.remove("pend"); typing = k; bnd = 0;
+      if(reduce){ endTyping(); follow(el, false); return; }
+      const tick = ()=>{
+        const n = Math.min(full.length, Math.max(bnd, Math.floor((performance.now()-t0) / ms * full.length)));
+        el.textContent = full.slice(0, n); el.appendChild(caret);
+        follow(el, false);
+        if(n >= full.length) endTyping();
+      };
+      tick(); typeTimer = setInterval(tick, 33);
+    }
+    function setCur(k){
+      lines.forEach((el,j)=>el.classList.toggle("cur", j===k));
+      if(k >= 0 && heardAll) follow(lines[k], true);
+    }
+    function lyricsOn(){
+      if(lyricMode) return;
+      lyricMode = true; box.classList.add("lyr");
+      sub.hidden = true; lyr.hidden = false;
+      if(!heardAll){
+        box.classList.add("crawl");
+        lyr.style.paddingTop = Math.round(lyr.clientHeight * 0.75) + "px";
+        meta.textContent = "TRANSMISION EN CURSO";
+      }
+    }
+    // dur = cuánto se estima que tarda en decirse la frase (para tipearla a ese ritmo)
+    const show = (k, dur) => {
+      cnt.textContent = `${String(k+1).padStart(2,"0")}/${total}`;
+      lyricsOn(); setCur(k);
+      if(!heardAll && k > revealed) startTyping(k, dur || lens[k] * 60 / INTRO_RATE);
+    };
     const talking = on => box.classList.toggle("talking", on);
     function stopAll(){
-      running = false; clearTimeout(timer); talking(false);
+      gen++; running = false; clearTimeout(timer); talking(false);
+      if(typing >= 0){ clearInterval(typeTimer); typeTimer = null; }
       try{ window.speechSynthesis && speechSynthesis.cancel(); }catch(e){}
       if(audio){ audio.pause(); }
     }
     function finish(){
-      stopAll(); ended = true;
+      stopAll(); endTyping(); ended = true; heardAll = true;
+      lines.forEach(el=>{ el.classList.remove("pend"); el.textContent = INTRO_LINES[+el.dataset.k].t; });
+      box.classList.remove("crawl"); box.classList.add("ended");
+      lyr.style.paddingTop = "";
       st.textContent = "Fin de la grabación";
-      sub.textContent = INTRO_TEXT[INTRO_TEXT.length-1].toUpperCase();
+      meta.textContent = "TRANSCRIPCION . TOQUE UNA FRASE PARA ESCUCHARLA";
+      setCur(-1); lyr.scrollTo({ top:0 });
+      cnt.textContent = "";
       play.textContent = "Encender la consola →";
       skip.textContent = "Escuchar de nuevo";
     }
     function leave(){ stopAll(); done(); }
 
     // modo 1: grabación (mp3); los subtítulos se reparten según el largo de cada frase
+    const timeOf = k => lens.slice(0,k).reduce((a,b)=>a+b,0) / sum;
     function playAudio(){
+      const fresh = !audio;
       audio = audio || new Audio(INTRO_AUDIO);
-      const lens = INTRO_LINES.map(l=>l.t.length), sum = lens.reduce((a,b)=>a+b,0);
       audio.ontimeupdate = ()=>{
-        if(!audio.duration) return;
+        if(!audio.duration || !running) return;
         let acc = 0, k = 0, f = audio.currentTime / audio.duration;
         while(k < total-1 && (acc + lens[k]) / sum < f){ acc += lens[k]; k++; }
-        if(k !== i){ i = k; show(i); }
+        if(k !== i){ i = k; show(i, audio.duration * 1000 * lens[k] / sum * 0.92); }
       };
       audio.onended = finish;
       audio.onerror = ()=>{ audio = null; note.hidden = false; note.textContent = "No se encontró el archivo de audio; se usa la voz del navegador."; playVoice(); };
-      running = true; talking(true); st.textContent = "Reproduciendo"; show(i);
-      audio.play().catch(()=>{ audio.onerror && audio.onerror(); });
+      const seek = ()=>{ if(audio && audio.duration) audio.currentTime = audio.duration * timeOf(i); };
+      if(fresh && i > 0) audio.addEventListener("loadedmetadata", seek, { once:true }); else seek();
+      running = true; talking(true); st.textContent = "Reproduciendo";
+      show(i, audio.duration ? audio.duration * 1000 * lens[i] / sum * 0.92 : 0);
+      audio.play().catch(()=>{ audio && audio.onerror && audio.onerror(); });
     }
     // modo 2: voz del navegador, frase por frase
     function playVoice(){
       const synth = window.speechSynthesis;
       const voice = synth ? pickVoice() : null;
+      const g = gen;
       running = true; st.textContent = "Reproduciendo";
       if(!voice){
         note.hidden = false;
@@ -985,42 +1073,58 @@ html{box-sizing:border-box} body{margin:0} [hidden]{display:none!important} img{
         note.hidden = false;
         note.textContent = `No hay una voz latina en este equipo; se usa “${voice.name}”. Para la voz ideal, abrí la página en Chrome o Edge.`;
       }
+      const alive = ()=> running && g === gen;
       const step = ()=>{
-        if(!running) return;
+        if(!alive()) return;
         if(i >= total){ finish(); return; }
-        const line = INTRO_LINES[i]; show(i);
-        const next = ()=>{ if(!running) return; talking(false); i++; timer = setTimeout(step, line.endPar ? 500 : 150); };
-        if(!voice){ talking(false); timer = setTimeout(next, (900 + line.t.length * 55) / INTRO_RATE); return; }
+        const line = INTRO_LINES[i];
+        const next = ()=>{ if(!alive()) return; talking(false); if(typing === i) endTyping(); i++; timer = setTimeout(step, line.endPar ? 500 : 150); };
+        if(!voice){
+          show(i, line.t.length * 55 / INTRO_RATE);
+          talking(false); timer = setTimeout(next, (900 + line.t.length * 55) / INTRO_RATE); return;
+        }
+        show(i, line.t.length * 62 / INTRO_RATE);
         const u = new SpeechSynthesisUtterance(line.t);
         u.voice = voice; u.lang = voice.lang; u.rate = INTRO_RATE; u.pitch = 1;
-        u.onstart = ()=>talking(true);
+        u.onstart = ()=>{ if(alive()) talking(true); };
+        // si el navegador avisa qué palabra está diciendo, el tipeo nunca queda atrás
+        u.onboundary = e=>{ if(alive() && typing === i) bnd = Math.max(bnd, (e.charIndex||0) + (e.charLength||0)); };
         u.onend = next; u.onerror = next;
         synth.speak(u);
       };
       step();
     }
+    function resume(){
+      play.textContent = "❚❚ Pausa";
+      if(INTRO_AUDIO){
+        if(audio){ running = true; talking(true); st.textContent = "Reproduciendo"; audio.play(); }
+        else playAudio();
+      }else playVoice();
+    }
+    // reproducir desde una frase (al tocarla en la transcripción, o "escuchar de nuevo")
+    function startFrom(k){
+      stopAll(); endTyping(); ended = false; i = k; box.classList.remove("ended");
+      skip.textContent = "Saltar introducción";
+      if(INTRO_AUDIO && audio && audio.duration){ audio.currentTime = audio.duration * timeOf(k); }
+      resume();
+    }
 
     play.addEventListener("click", ()=>{
       if(ended){ leave(); return; }
-      if(running){
-        stopAll(); st.textContent = "En pausa"; play.textContent = "▶ Continuar"; return;
-      }
-      play.textContent = "❚❚ Pausa";
-      if(INTRO_AUDIO){ if(audio){ running = true; talking(true); st.textContent = "Reproduciendo"; audio.play(); } else playAudio(); }
-      else playVoice();
+      if(running){ stopAll(); st.textContent = "En pausa"; play.textContent = "▶ Continuar"; return; }
+      resume();
     });
     skip.addEventListener("click", ()=>{
-      if(ended){                        // escuchar de nuevo
-        ended = false; i = 0; if(audio) audio.currentTime = 0;
-        skip.textContent = "Saltar introducción"; play.textContent = "❚❚ Pausa";
-        INTRO_AUDIO && audio ? (running = true, talking(true), st.textContent = "Reproduciendo", audio.play()) : (INTRO_AUDIO ? playAudio() : playVoice());
-        return;
-      }
+      if(ended){ startFrom(0); return; }   // escuchar de nuevo
       leave();
+    });
+    lyr.addEventListener("click", e=>{
+      const b = e.target.closest(".ly");
+      if(b && !b.classList.contains("pend")) startFrom(+b.dataset.k);
     });
     // precarga de voces (Chrome las entrega tarde)
     try{ window.speechSynthesis && speechSynthesis.getVoices(); }catch(e){}
-    return stopAll;
+    return ()=>{ stopAll(); clearInterval(typeTimer); };
   }
 
   /* ---------- piezas compartidas ---------- */
@@ -1029,13 +1133,12 @@ html{box-sizing:border-box} body{margin:0} [hidden]{display:none!important} img{
   function type(tape, text){
     clearInterval(tapeTimer);
     tape.textContent = "";
-    const cur = $("span","cursor","▌");
+    tape.classList.toggle("bad", /^ERROR/.test(text));
     let i = 0;
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if(reduce){ tape.textContent = text; tape.appendChild(cur); return; }
+    if(reduce){ tape.textContent = text; return; }
     tapeTimer = setInterval(()=>{
       tape.textContent = text.slice(0, ++i);
-      tape.appendChild(cur);
       if(i >= text.length) clearInterval(tapeTimer);
     }, 22);
   }
@@ -1044,8 +1147,8 @@ html{box-sizing:border-box} body{margin:0} [hidden]{display:none!important} img{
   /* ---------- radar y estado de las reparaciones (panel lateral) ---------- */
   const CHECKS = [
     { name:"Alimentación" },
-    { name:"Traductor de tarjetas" },
-    { name:"Relés del panel F" },
+    { name:"Inicialización" },
+    { name:"Procesador" },
     { name:"Receptor" }
   ];
   const BLIPS = {
@@ -1221,7 +1324,7 @@ html{box-sizing:border-box} body{margin:0} [hidden]{display:none!important} img{
             const left = Math.ceil(((lv.waitUntil||0) - Date.now()) / 1000);
             if(left > 0){
               lever.lock(true); lever.classList.add("cooling");
-              hint.textContent = `Recargando relés · ${left} s`;
+              hint.textContent = `Recargando procesador · ${left} s`;
               return;
             }
             clearInterval(cdTimer);
@@ -1230,7 +1333,7 @@ html{box-sizing:border-box} body{margin:0} [hidden]{display:none!important} img{
             hint.textContent = HINT_TXT;
             if(!lv.solved){
               lever.lock(false);
-              type(readout.tape, "PANEL EN ESPERA · Relés listos. Podés volver a intentar.");
+              type(readout.tape, "PANEL EN ESPERA · Procesador listo. Podés volver a intentar.");
             }
           };
           tick();
@@ -1252,12 +1355,12 @@ html{box-sizing:border-box} body{margin:0} [hidden]{display:none!important} img{
             readout.light("ok"); sfx.ok();
             lamps.querySelectorAll(".lamp").forEach((b,i)=>setTimeout(()=>b.parentElement.classList.add("flash"), i*120));
             lever.lock(true);
-            type(readout.tape, "MÁQUINA ENCENDIDA · Relés energizados. Módulo 2 listo para cargar.");
+            type(readout.tape, "MÁQUINA ENCENDIDA · Procesador energizado. Módulo 2 listo para cargar.");
             showNext();
           }else{
             readout.light("bad"); sfx.bad();
             bank.classList.remove("shake"); void bank.offsetWidth; bank.classList.add("shake");
-            type(readout.tape, "ERROR · Secuencia rechazada. Los relés tardan 10 segundos en recargarse.");
+            type(readout.tape, "ERROR · Secuencia rechazada. El procesador tarda 10 segundos en recargarse.");
             lv.waitUntil = Date.now() + WAIT_MS; save();
             cooldown();
           }
@@ -1265,10 +1368,10 @@ html{box-sizing:border-box} body{margin:0} [hidden]{display:none!important} img{
 
         if(lv.solved){
           readout.light("ok"); lever.lock(true);
-          type(readout.tape, "MÁQUINA ENCENDIDA · Relés energizados. Módulo 2 listo para cargar.");
+          type(readout.tape, "MÁQUINA ENCENDIDA · Procesador energizado. Módulo 2 listo para cargar.");
           showNext();
         }else if((lv.waitUntil||0) > Date.now()){
-          type(readout.tape, "ERROR · Secuencia rechazada. Los relés tardan 10 segundos en recargarse.");
+          type(readout.tape, "ERROR · Secuencia rechazada. El procesador tarda 10 segundos en recargarse.");
           cooldown();
         }else{
           type(readout.tape, "PANEL EN ESPERA · Ajustá las cuatro lámparas y bajá la palanca.");
@@ -1276,13 +1379,13 @@ html{box-sizing:border-box} body{margin:0} [hidden]{display:none!important} img{
       }
     },
     {
-      name: "Traductor · Módulo de sentencias",
+      name: "",   // módulo 2: sin cartel arriba
       mount(stage, api){
         const SENTENCES = BLOCKS[state.m|0];
         const BOOT = [
           ["MODULO 2 . UNIDAD DE CONTROL","dim"],
           ["PRUEBA DE MEMORIA ....... 4096 PALABRAS OK","dim"],
-          ["LECTORA DE TARJETAS ..... LISTA","dim"],
+          ["LECTORA DE TARJETAS ..... ERROR","err"],
           ["PROGRAMA DE ACCESO: SE REQUIEREN 4 SENTENCIAS",""]
         ];
         const lv = state.l2 = state.l2 || { entries:[], log:[], booted:false, solved:false };
@@ -1302,29 +1405,27 @@ html{box-sizing:border-box} body{margin:0} [hidden]{display:none!important} img{
 
         const crt = $("div","crt");
         crt.innerHTML = `
-          <div class="crt-label"><span>Terminal · Módulo 2</span><span>Fósforo P1</span></div>
-          <div class="screen split">
-            <div class="pane-a">
+          <div class="screen s3seq">
+            <div class="alerta boot2"></div>
+            <div class="tabla2" hidden>
               <div class="code-title"><span>TABLA DE CODIFICACION</span><span>ZONA x DIGITO</span></div>
               <div class="code-wrap">${tableHTML}</div>
             </div>
-            <hr class="rule split-rule">
-            <div class="pane-b">
-            <div class="term" aria-live="polite"></div>
+            <hr class="rule" hidden>
+            <div class="term t3" aria-live="polite"></div>
             <label class="prompt" hidden>
               <span class="ps"></span>
               <input id="term-in" type="text" autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false" maxlength="24" aria-label="Sentencia">
             </label>
-            <hr class="rule">
-            <div class="progress" aria-label="Sentencias cargadas"></div>
-            </div>
           </div>`;
         const screen = crt.querySelector(".screen");
+        const boot2 = crt.querySelector(".boot2");
+        const tabla2 = crt.querySelector(".tabla2");
+        const rule2 = crt.querySelector(".rule");
         const term = crt.querySelector(".term");
         const prompt = crt.querySelector(".prompt");
         const ps = crt.querySelector(".ps");
         const input = crt.querySelector("input");
-        const prog = crt.querySelector(".progress");
 
         const foot = $("div","crt-foot");
         const pilots = $("div","pilots",
@@ -1339,21 +1440,21 @@ html{box-sizing:border-box} body{margin:0} [hidden]{display:none!important} img{
 
         screen.addEventListener("click", e => { if(e.target.closest(".code-wrap")) return; if(!input.disabled) input.focus(); });
 
-        function line(t, cls, store=true){
-          const p = $("p", cls||"", null); p.textContent = t; term.appendChild(p);
-          term.scrollTop = term.scrollHeight;
+        function line(t, cls, store=true, into=term){
+          const p = $("p", cls||"", null); p.textContent = t; into.appendChild(p);
+          screen.scrollTop = screen.scrollHeight;
           if(store){ lv.log.push([t, cls||""]); if(lv.log.length>60) lv.log.shift(); save(); }
         }
-        function drawProgress(){
-          prog.innerHTML = "SENTENCIAS " + SENTENCES.map((_,i)=>
-            lv.solved ? `<b class="done">OK</b>`
-            : i < lv.entries.length ? `<b class="filled">${i+1}</b>`
-            : `<b>${i+1}</b>`).join("");
+        function drawProgress(){}
+        function showTable(){
+          tabla2.hidden = false; rule2.hidden = false;
+          screen.scrollTop = screen.scrollHeight;
         }
         function ask(){
           if(lv.solved || lv.entries.length >= SENTENCES.length){ prompt.hidden = true; return; }
           ps.textContent = `INGRESE SENTENCIA ${lv.entries.length+1} >`;
           prompt.hidden = false; input.disabled = false; input.value = "";
+          screen.scrollTop = screen.scrollHeight;
           setTimeout(()=>input.focus({preventScroll:true}), 30);
         }
         let nextBtn = null;
@@ -1387,7 +1488,7 @@ html{box-sizing:border-box} body{margin:0} [hidden]{display:none!important} img{
             if(ok){
               sfx.ok();
               line("PROGRAMA DE ACCESO COMPLETO", "");
-              line("ACCESO CONCEDIDO . TRADUCTOR EN LINEA", "");
+              line("RADAR INICIADO", "");
               finish();
             }else{
               sfx.bad(); light("bad");
@@ -1401,25 +1502,44 @@ html{box-sizing:border-box} body{margin:0} [hidden]{display:none!important} img{
         });
         input.addEventListener("input", ()=>{ if(pilots.querySelector(".bad.lit")) light(null); });
 
-        drawProgress();
-        lv.log.forEach(([t,c]) => line(t, c, false));
-        if(lv.solved){ finish(); return; }
-        if(lv.entries.length >= SENTENCES.length){ lv.entries = []; save(); drawProgress(); }
-        if(lv.booted){ ask(); return; }
+        // partidas guardadas con versiones anteriores: el arranque ya no va en el historial
+        const OLD_BOOT = /^(MODULO 2 \. UNIDAD|PRUEBA DE MEMORIA|LECTORA DE TARJETAS|PROGRAMA DE ACCESO: SE REQUIEREN)/;
+        lv.log = lv.log.filter(([t]) => !OLD_BOOT.test(t))
+                       .map(([t,c]) => [t === "ACCESO CONCEDIDO . TRADUCTOR EN LINEA" ? "RADAR INICIADO" : t, c]);
 
-        // arranque: las líneas aparecen de a una
+        if(lv.booted || lv.solved){
+          BOOT.forEach(([t,c]) => line(t, c, false, boot2));
+          showTable();
+          lv.log.forEach(([t,c]) => line(t, c, false));
+          if(lv.solved){ finish(); return; }
+          if(lv.entries.length >= SENTENCES.length){ lv.entries = []; save(); }
+          ask(); return;
+        }
+
+        // arranque: las líneas aparecen de a una y después la tabla
+        lv.log = []; lv.entries = [];
         input.disabled = true;
         const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
         let k = 0;
         (function next(){
           if(!term.isConnected) return;
-          if(k < BOOT.length){ line(BOOT[k][0], BOOT[k][1]); k++; setTimeout(next, reduce?0:420); }
-          else { lv.booted = true; save(); ask(); }
+          if(k < BOOT.length){
+            const [t,c] = BOOT[k++];
+            line(t, c, false, boot2);
+            if(c === "err") sfx.alarm();
+            setTimeout(next, reduce ? 0 : 420);
+          }else{
+            setTimeout(()=>{
+              if(!term.isConnected) return;
+              showTable(); sfx.click();
+              lv.booted = true; save(); ask();
+            }, reduce ? 0 : 500);
+          }
         })();
       }
     },
     {
-      name: "Panel F · Bichos en los relés",
+      name: "",   // procesador: sin cartel arriba
       mount(stage, api){
         /* Datos del nivel "Panel F" (solución única, verificada por fuerza bruta).
            Relés 0..8 = 1.1 .. 3.3. Caras del borde en el orden de CARA. */
@@ -1486,40 +1606,40 @@ html{box-sizing:border-box} body{margin:0} [hidden]{display:none!important} img{
             map += owner ? `<div class="rj">≡${LET[owner]}</div>` : `<div></div>`;
           }
         }
+        // 2) datos de los intrusos · 3) vista esquemática · 4) disponible y sensores
         const datos = `<div class="datos">
             ${B.map(b=>{ const [c,d]=CARA[P.rej[b]];
-              return `<p>${LET[b]} ${NOM[b]} <span class="dim">EN</span> ${rc(P.ini[b])}</p>
-                      <p class="sub">SALE POR LA REJILLA ${({U:"DE ARRIBA",D:"DE ABAJO",L:"DE LA IZQUIERDA",R:"DE LA DERECHA"})[d]} DEL ${rc(c)}</p>`; }).join("")}
+              return `<p class="sq">${LET[b]} ${NOM[b]} <span class="dim">EN</span> ${rc(P.ini[b])}</p>
+                      <p class="sub sq">SALE POR LA REJILLA ${({U:"DE ARRIBA",D:"DE ABAJO",L:"DE LA IZQUIERDA",R:"DE LA DERECHA"})[d]} DEL ${rc(c)}</p>`; }).join("")}
+          </div>
+          <div class="esquema">
+            <p class="dim sq">VISTA ESQUEMATICA</p>
+            <div class="mapa sq" aria-label="Vista esquemática del procesador">${map}</div>
           </div>
           <div class="sens">
-            <p>SENSOR ALFA <span>= CATALOGO Nº ${P.sens[0].num}</span></p>
-            <p>SENSOR BETA <span>= CATALOGO Nº ${P.sens[1].num}</span></p>
-            <p class="dim">DISPONIBLE: 3 IMPULSOS + ALFA + BETA</p>
+            <p class="sq">DISPONIBLE: 3 IMPULSOS + ALFA + BETA</p>
+            <p class="sq">SENSOR ALFA <span>= CATALOGO Nº ${P.sens[0].num}</span></p>
+            <p class="sq">SENSOR BETA <span>= CATALOGO Nº ${P.sens[1].num}</span></p>
           </div>`;
 
         const crt = $("div","crt");
         crt.innerHTML = `
-          <div class="crt-label"><span>Terminal · Módulo 3 · Diagnóstico</span><span class="alarm-tag"></span></div>
-          <div class="screen split s3">
-            <div class="pane-a" hidden>
-              <div class="falla" hidden>
-                <div class="mapa" aria-label="Mapa del panel F">${map}</div>
-                <div>${datos}</div>
-              </div>
-            </div>
-            <div class="pane-b">
+          <div class="crt-label"><span></span><span class="alarm-tag"></span></div>
+          <div class="screen s3seq">
             <div class="alerta"></div>
-            <hr class="rule">
+            <div class="info3">${datos}</div>
+            <hr class="rule" hidden>
             <div class="term t3" aria-live="polite"></div>
             <label class="prompt" hidden>
               <span class="ps"></span>
               <input id="term3-in" type="text" autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false" maxlength="24" aria-label="Dato del programa">
             </label>
-            </div>
           </div>`;
         const screen = crt.querySelector(".screen");
         const alerta = crt.querySelector(".alerta");
-        const falla = crt.querySelector(".falla");
+        const info3 = crt.querySelector(".info3");
+        const seq = [...info3.querySelectorAll(".sq")];
+        const rule3 = crt.querySelector(".rule");
         const term = crt.querySelector(".term");
         const prompt = crt.querySelector(".prompt");
         const ps = crt.querySelector(".ps");
@@ -1538,11 +1658,11 @@ html{box-sizing:border-box} body{margin:0} [hidden]{display:none!important} img{
 
         function line(t, cls, store=true, into=term){
           const p = $("p", cls||"", null); p.textContent = t; into.appendChild(p);
-          into.scrollTop = into.scrollHeight;
+          screen.scrollTop = screen.scrollHeight;
           if(store){ lv.log.push([t, cls||""]); if(lv.log.length>80) lv.log.shift(); save(); }
         }
         function setTag(){
-          tag.textContent = lv.solved ? "Panel F normal" : "Falla en panel F";
+          tag.textContent = lv.solved ? "Procesador normal" : "Falla en procesador";
           tag.classList.toggle("on", !lv.solved);
         }
 
@@ -1557,7 +1677,7 @@ html{box-sizing:border-box} body{margin:0} [hidden]{display:none!important} img{
           }
           if(r.kind==="wall"){
             sfx.bad(); light("bad");
-            line(`PROGRAMA ILEGAL . LA INSTRUCCION DEL RELE ${rc(r.cell)} APUNTA CONTRA UNA PARED`, "err");
+            line(`PROGRAMA ILEGAL . LA INSTRUCCION DE LA POSICION ${rc(r.cell)} APUNTA CONTRA UNA PARED`, "err");
             onFail && onFail(); return;
           }
           line("EJECUTANDO PROGRAMA ...", "dim");
@@ -1565,12 +1685,12 @@ html{box-sizing:border-box} body{margin:0} [hidden]{display:none!important} img{
             if(r.kind==="ok"){
               sfx.ok(); light("ok");
               B.forEach(b=>line(`   ${NOM[b].padEnd(9," ")} EN SU TRAMPA`, ""));
-              line("PANEL F LIMPIO . RESULTADOS NORMALES", "");
+              line("PROCESADOR LIMPIO . RESULTADOS NORMALES", "");
               lv.solved = true; save(); setTag(); finish();
             }else{
               sfx.bad(); light("bad");
               crt.classList.remove("shake"); void crt.offsetWidth; crt.classList.add("shake");
-              line("PROGRAMA RECHAZADO . LOS INTRUSOS SIGUEN EN EL PANEL F", "err");
+              line("PROGRAMA RECHAZADO . LOS INTRUSOS SIGUEN EN EL PROCESADOR", "err");
               onFail && onFail();
             }
           }, 700);
@@ -1599,7 +1719,7 @@ html{box-sizing:border-box} body{margin:0} [hidden]{display:none!important} img{
           const cells = [];
           for(let c=0;c<9;c++){
             const cell = $("div","knob-cell");
-            cell.innerHTML = `<span class="tag">Relé ${rc(c)}</span>
+            cell.innerHTML = `<span class="tag">Posición ${rc(c)}</span>
               <span class="dial"><button class="knob" type="button"></button></span>
               <span class="kplate"><b></b><small></small></span>`;
             const btn = cell.querySelector(".knob");
@@ -1623,7 +1743,7 @@ html{box-sizing:border-box} body{margin:0} [hidden]{display:none!important} img{
             cell.querySelector(".kplate small").textContent = KN[k].l;
             cell.classList.toggle("set", k>0);
             cell.querySelector(".knob").setAttribute("aria-label",
-              `Relé ${rc(c)}: ${k===0?"vacío":k<=4?"impulso "+DW["URDL"[k-1]].toLowerCase():"sensor "+SNAME[k-5].toLowerCase()}. Tocá para girar.`);
+              `Posición ${rc(c)}: ${k===0?"vacío":k<=4?"impulso "+DW["URDL"[k-1]].toLowerCase():"sensor "+SNAME[k-5].toLowerCase()}. Tocá para girar.`);
           }
           cells.forEach((_,c)=>paintKnob(c));
           lever = makeLever(()=>{ if(lv.solved) return; report(lv.knobs.map(knobToProg)); });
@@ -1637,11 +1757,11 @@ html{box-sizing:border-box} body{margin:0} [hidden]{display:none!important} img{
 
         /* ---------- forma de carga B: comandos en el terminal ---------- */
         const FIELDS = [
-          {k:"cell", t:"A", i:0, label:"IMPULSO 1 . RELE"}, {k:"dir", i:0, label:"IMPULSO 1 . DIRECCION"},
-          {k:"cell", t:"A", i:1, label:"IMPULSO 2 . RELE"}, {k:"dir", i:1, label:"IMPULSO 2 . DIRECCION"},
-          {k:"cell", t:"A", i:2, label:"IMPULSO 3 . RELE"}, {k:"dir", i:2, label:"IMPULSO 3 . DIRECCION"},
-          {k:"cell", t:"S", s:0, label:"SENSOR ALFA . RELE"},
-          {k:"cell", t:"S", s:1, label:"SENSOR BETA . RELE"}
+          {k:"cell", t:"A", i:0, label:"IMPULSO 1 . POSICION"}, {k:"dir", i:0, label:"IMPULSO 1 . DIRECCION"},
+          {k:"cell", t:"A", i:1, label:"IMPULSO 2 . POSICION"}, {k:"dir", i:1, label:"IMPULSO 2 . DIRECCION"},
+          {k:"cell", t:"A", i:2, label:"IMPULSO 3 . POSICION"}, {k:"dir", i:2, label:"IMPULSO 3 . DIRECCION"},
+          {k:"cell", t:"S", s:0, label:"SENSOR ALFA . POSICION"},
+          {k:"cell", t:"S", s:1, label:"SENSOR BETA . POSICION"}
         ];
         const DIRMAP = {ARRIBA:"U", ARR:"U", SUBE:"U", "↑":"U", ABAJO:"D", ABA:"D", BAJA:"D", "↓":"D",
                         IZQUIERDA:"L", IZQ:"L", "←":"L", DERECHA:"R", DER:"R", "→":"R"};
@@ -1650,6 +1770,7 @@ html{box-sizing:border-box} body{margin:0} [hidden]{display:none!important} img{
           const f = FIELDS[lv.entries.length];
           ps.textContent = f.label + " >";
           prompt.hidden = false; input.disabled = false; input.value = "";
+          screen.scrollTop = screen.scrollHeight;
           input.placeholder = f.k==="cell" ? "p. ej. 2.3" : "arriba / abajo / izquierda / derecha";
           setTimeout(()=>input.focus({preventScroll:true}), 30);
         }
@@ -1663,7 +1784,7 @@ html{box-sizing:border-box} body{margin:0} [hidden]{display:none!important} img{
           return prog;
         }
         if(INPUT_MODE === "terminal"){
-          screen.addEventListener("click", e=>{ if(e.target.closest(".falla")) return; if(!input.disabled) input.focus(); });
+          screen.addEventListener("click", e=>{ if(e.target.closest(".info3")) return; if(!input.disabled) input.focus(); });
           input.addEventListener("input", ()=>{ if(pilots.querySelector(".bad.lit")) light(null); });
           input.addEventListener("keydown", e=>{
             if(e.key!=="Enter") return;
@@ -1678,10 +1799,10 @@ html{box-sizing:border-box} body{margin:0} [hidden]{display:none!important} img{
             }
             if(f.k==="cell"){
               const m = v.replace(/\s/g,"").match(/^([1-3])[.,\-]?([1-3])$/);
-              if(!m){ sfx.bad(); line("   ESCRIBA EL RELE COMO FILA.COLUMNA, POR EJEMPLO 2.3", "err"); ask(); return; }
+              if(!m){ sfx.bad(); line("   ESCRIBA LA POSICION COMO FILA.COLUMNA, POR EJEMPLO 2.3", "err"); ask(); return; }
               const c = 3*(+m[1]-1) + (+m[2]-1);
               const used = FIELDS.some((g,idx)=>g.k==="cell" && idx<lv.entries.length && lv.entries[idx]===c);
-              if(used){ sfx.bad(); line(`   EL RELE ${rc(c)} YA TIENE UNA INSTRUCCION`, "err"); ask(); return; }
+              if(used){ sfx.bad(); line(`   LA POSICION ${rc(c)} YA TIENE UNA INSTRUCCION`, "err"); ask(); return; }
               lv.entries.push(c);
             }else{
               const d = DIRMAP[v];
@@ -1706,32 +1827,31 @@ html{box-sizing:border-box} body{margin:0} [hidden]{display:none!important} img{
         setTag();
 
         const BOOT = [
-          ["MODULO 3 . PROGRAMA DE PRUEBA","dim"],
+          ["FALLO EN PROCESADOR","dim"],
           ["CALCULANDO ...... RESULTADO IMPOSIBLE","err"],
           ["CALCULANDO ...... RESULTADO IMPOSIBLE","err"],
-          ["*** FALLA EN EL PANEL F ***","err"],
-          ["SE DETECTARON 3 INTRUSOS ENTRE LOS RELES","err"],
-          ["NO SE PUEDEN SACAR CON LA MANO: HAY QUE PROGRAMAR EL PANEL.",""],
-          ["CADA INTRUSO DEBE SALIR POR LA REJILLA DE SU TIPO. CONSULTE EL MANUAL MO-6.",""]
+          ["SE DETECTARON LOS SIGUIENTES 3 INTRUSOS EN EL PROCESADOR","err"]
         ];
-        const HOWTO = INPUT_MODE==="perillas"
-          ? "ARME EL PROGRAMA EN EL TABLERO, COPIELO EN LAS PERILLAS Y BAJE LA PALANCA."
-          : "ARME EL PROGRAMA EN EL TABLERO Y CARGUELO ACA. ESCRIBA BORRAR PARA EMPEZAR DE NUEVO.";
         function ready(){
-          falla.hidden = false; falla.parentElement.hidden = false;
+          seq.forEach(el=>el.classList.add("on"));
+          rule3.hidden = false;
+          screen.scrollTop = screen.scrollHeight;
           if(lv.solved){ finish(); return; }
           if(INPUT_MODE==="terminal") ask();
         }
 
-        lv.log.forEach(([t,c]) => line(t, c, false));
         if(lv.booted){
           BOOT.forEach(([t,c]) => line(t, c, false, alerta));
+          // partidas guardadas con versiones anteriores: se borran las instrucciones que ya no van
+          lv.log = lv.log.filter(([t]) => !/^(ARME EL PROGRAMA|NO SE PUEDEN SACAR|CADA INTRUSO DEBE)/.test(t));
+          lv.log.forEach(([t,c]) => line(t, c, false));
           ready(); return;
         }
+        lv.log = [];
         input.disabled = true;
         if(lever) lever.lock(true);
         const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-        let k = 0;
+        let k = 0, q = 0;
         (function next(){
           if(!alerta.isConnected) return;
           if(k < BOOT.length){
@@ -1739,9 +1859,13 @@ html{box-sizing:border-box} body{margin:0} [hidden]{display:none!important} img{
             line(t, c, false, alerta);
             if(c==="err") sfx.alarm();
             setTimeout(next, reduce ? 0 : 650);
+          }else if(q < seq.length){
+            // los datos, la vista esquemática y los sensores aparecen de a uno
+            seq[q++].classList.add("on"); sfx.click();
+            screen.scrollTop = screen.scrollHeight;
+            setTimeout(next, reduce ? 0 : (q === 1 || seq[q-1].classList.contains("mapa") ? 650 : 380));
           }else{
-            lv.booted = true;
-            line(HOWTO, "");
+            lv.booted = true; save();
             if(lever) lever.lock(false);
             ready();
           }
@@ -1771,7 +1895,7 @@ html{box-sizing:border-box} body{margin:0} [hidden]{display:none!important} img{
 
         const crt = $("div","crt");
         crt.innerHTML = `
-          <div class="crt-label"><span>Terminal · Módulo 4</span><span class="alarm-tag"></span></div>
+          <div class="crt-label"><span></span><span class="alarm-tag"></span></div>
           <div class="screen split">
             <div class="pane-a" hidden>
             <div class="vib-panel" hidden>
@@ -2029,7 +2153,7 @@ html{box-sizing:border-box} body{margin:0} [hidden]{display:none!important} img{
     const i = Math.min(state.level || 0, LEVELS.length-1);
     const L = LEVELS[i];
     setDrums(i+1);
-    stage.appendChild($("div","level-name", L.name));
+    if(L.name) stage.appendChild($("div","level-name", L.name));
     L.mount(stage, {
       advance(){ state.level = i+1; save(); render(); }
     });
