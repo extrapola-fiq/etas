@@ -590,7 +590,7 @@ html{box-sizing:border-box} body{margin:0} [hidden]{display:none!important} img{
     }
     .side{grid-template-columns:1fr; grid-template-areas:"maker" "scope" "read" "checks"; align-content:start; justify-items:stretch; gap:clamp(10px,1.8vh,18px)}
     .scope-box{justify-self:center}
-    .scope{width:clamp(110px, min(17vw, 24vh), 220px)}
+    .scope{width:clamp(96px, min(15vw, 18vh), 200px)}
     .maker h1{font-size:clamp(26px, 2.5vw, 40px)}
     .maker small{letter-spacing:.14em}
     .scope-read{justify-self:center}
@@ -668,6 +668,10 @@ html{box-sizing:border-box} body{margin:0} [hidden]{display:none!important} img{
     .intro .screen{min-height:0}
     .i-sub{font-size:19px; min-height:3.6em}
     .mapa{grid-template-columns:repeat(5, 32px); grid-auto-rows:32px}
+    .power{--pl:26px; padding:6px; gap:4px}
+    .power .lamp-cell .tag, .power .name{display:none}
+    .power .lever{zoom:.28}
+    .power .lever .tag{display:none}
   }
 
   /* botón ENTER: solo en pantallas táctiles (en la compu no aparece) */
@@ -681,6 +685,31 @@ html{box-sizing:border-box} body{margin:0} [hidden]{display:none!important} img{
     }
     .enter-btn:active{background:var(--ph); color:var(--glass); text-shadow:none}
   }
+
+  /* panel de encendido */
+  .power{
+    --pl:40px;
+    display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:8px;
+    padding:10px 10px 8px; border-radius:8px;
+    background:linear-gradient(180deg, rgba(0,0,0,.28), rgba(0,0,0,.14));
+    box-shadow:inset 0 3px 8px rgba(0,0,0,.55), 0 1px 0 rgba(255,255,255,.06);
+  }
+  .power[hidden]{display:none}
+  .power .lamps{grid-template-columns:repeat(4, minmax(0,1fr)); gap:6px}
+  .power .lamp-cell{gap:4px}
+  .power .lamp{--size:var(--pl)}
+  .power .lamp-cell .tag{font-size:9px}
+  .power .name{font-size:8px; padding:1px 3px; letter-spacing:.05em; max-width:100%; overflow:hidden; text-overflow:ellipsis}
+  .power .lever{zoom:.42; gap:4px}
+  .power .lever .hint{display:none}
+  .power:not(.active) .lamp{cursor:default}
+  .power.cooling .lever{opacity:.75}
+  /* celular vertical: botonera debajo de la pantalla */
+  .power.in-stage{--pl:48px; gap:14px; padding:12px 16px 10px; flex:none}
+  .power.in-stage .lamps{gap:10px}
+  .power.in-stage .name{font-size:9px}
+  .power.in-stage .lever{zoom:.48}
+  .l1cd{margin:0; color:#ffb86b; text-shadow:0 0 6px rgba(255,160,80,.6); font-variant-numeric:tabular-nums}
 
   /* foot */
   .foot{
@@ -1264,117 +1293,160 @@ html{box-sizing:border-box} body{margin:0} [hidden]{display:none!important} img{
     return r;
   }
 
+  /* ---------- panel de encendido: lámparas + palanca, fijo en la máquina ----------
+     En la compu va en el panel lateral; en el celular vertical, debajo de la pantalla. */
+  const POWER = (()=>{
+    const el = $("div","power");
+    el.setAttribute("aria-label","Panel de encendido");
+    const lamps = $("div","lamps");
+    const cells = [0,1,2,3].map(k=>{
+      const cell = $("div","lamp-cell");
+      cell.innerHTML = `<span class="tag">L${k+1}</span>
+        <button class="lamp" type="button"><span class="glass"></span></button>
+        <span class="name"></span>`;
+      cell.querySelector(".lamp").addEventListener("click", ()=>{
+        if(!api.canEdit()) return;
+        const lv = state.l1;
+        lv.lamps[k] = (lv.lamps[k] + 1) % COLORS.length;
+        sfx.click(); paint(k); save();
+        api.onLamp && api.onLamp();
+      });
+      lamps.appendChild(cell);
+      return cell;
+    });
+    const lever = makeLever(()=>{ api.onPull && api.onPull(); });
+    el.append(lamps, lever);
+    function paint(k){
+      const ci = (state.l1 && state.l1.lamps[k] != null) ? state.l1.lamps[k] : -1;
+      const cell = cells[k], b = cell.querySelector(".lamp"), on = ci >= 0;
+      b.classList.toggle("on", on); b.classList.toggle("off", !on);
+      b.style.setProperty("--c", on ? COLORS[ci].hex : "#2a2c27");
+      b.dataset.color = on ? COLORS[ci].id : "";
+      cell.querySelector(".name").textContent = on ? COLORS[ci].id : "apagada";
+      b.setAttribute("aria-label", `Lámpara ${k+1}: ${on ? COLORS[ci].id : "apagada"}.`);
+    }
+    const wide = window.matchMedia("(min-width: 900px), (orientation: landscape) and (min-width: 600px) and (max-height: 540px)");
+    const api = {
+      el, onPull:null, onLamp:null,
+      canEdit(){ return state.introDone && (state.level||0) === 0 && !(state.l1 && state.l1.solved); },
+      lock(on){ lever.lock(on); },
+      cooling(left){ el.classList.toggle("cooling", left > 0); },
+      flash(){ cells.forEach((c,i)=>setTimeout(()=>c.classList.add("flash"), i*120)); },
+      refresh(){
+        state.l1 = state.l1 || { lamps:[-1,-1,-1,-1], solved:false };
+        cells.forEach((c,k)=>{ c.classList.remove("flash"); paint(k); });
+        el.classList.toggle("active", api.canEdit());
+        lever.lock(!api.canEdit());
+        el.hidden = !state.introDone;
+      },
+      place(){
+        if(wide.matches){
+          el.classList.remove("in-stage");
+          const ck = document.getElementById("checks");
+          if(el.previousElementSibling !== ck) ck.after(el);
+        }else{
+          el.classList.add("in-stage");
+          const stage = document.getElementById("stage"), crt = stage.querySelector(".crt");
+          if(crt) crt.after(el); else stage.appendChild(el);
+        }
+      }
+    };
+    wide.addEventListener("change", ()=>api.place());
+    return api;
+  })();
+
   /* ---------- niveles ---------- */
   const LEVELS = [
     {
-      name: "Alimentación · Secuencia de encendido",
+      name: "",   // alimentación: sin cartel arriba
       mount(stage, api){
-                const lv = state.l1 = state.l1 || { lamps:[-1,-1,-1,-1], solved:false };
+        const lv = state.l1 = state.l1 || { lamps:[-1,-1,-1,-1], solved:false };
 
-        const bank = $("div","bank");
-        const lamps = $("div","lamps");
-        const cells = lv.lamps.map((ci, k)=>{
-          const cell = $("div","lamp-cell");
-          cell.innerHTML = `<span class="tag">L${k+1}</span>
-            <button class="lamp" type="button"><span class="glass"></span></button>
-            <span class="name"></span>`;
-          const b = cell.querySelector(".lamp");
-          b.addEventListener("click", ()=>{
-            if(lv.solved) return;
-            lv.lamps[k] = (lv.lamps[k] + 1) % COLORS.length;
-            sfx.click(); paint(k); save();
-            readout.light(null);
-          });
-          lamps.appendChild(cell);
-          return cell;
-        });
-        function paint(k){
-          const cell = cells[k], b = cell.querySelector(".lamp"), ci = lv.lamps[k];
-          const on = ci >= 0;
-          b.classList.toggle("on", on); b.classList.toggle("off", !on);
-          b.style.setProperty("--c", on ? COLORS[ci].hex : "#2a2c27");
-          b.dataset.color = on ? COLORS[ci].id : "";
-          cell.querySelector(".name").textContent = on ? COLORS[ci].id : "apagada";
-          b.setAttribute("aria-label", `Lámpara ${k+1}: ${on ? COLORS[ci].id : "apagada"}. Tocá para cambiar de color.`);
+        const crt = $("div","crt");
+        crt.innerHTML = `<div class="screen s3seq"><div class="alerta l1log" role="status" aria-live="polite"></div><p class="l1cd" hidden></p></div>`;
+        const log = crt.querySelector(".l1log"), cd = crt.querySelector(".l1cd"), screen = crt.querySelector(".screen");
+        const foot = $("div","crt-foot");
+        const pilots = $("div","pilots",
+          `<div class="pilot ok"><i></i><span>Correcto</span></div>
+           <div class="pilot bad"><i></i><span>Error</span></div>`);
+        const light = which => {
+          pilots.querySelector(".ok").classList.toggle("lit", which==="ok");
+          pilots.querySelector(".bad").classList.toggle("lit", which==="bad");
+        };
+        foot.appendChild(pilots);
+        stage.append(crt, foot);
+
+        function line(t, cls){
+          const p = $("p", cls||"", null); p.textContent = t; log.appendChild(p);
+          while(log.children.length > 14) log.firstChild.remove();
+          screen.scrollTop = screen.scrollHeight;
         }
-        cells.forEach((_,k)=>paint(k));
-
-        const readout = makeReadout();
-        const lever = makeLever(check);
-        bank.append(lamps, lever);
-        stage.append(bank, readout);
-
         let nextBtn = null;
         function showNext(){
           if(nextBtn) return;
-          nextBtn = $("button","next","Continuar →");
-          nextBtn.type = "button";
+          nextBtn = $("button","next","Continuar →"); nextBtn.type = "button";
           nextBtn.addEventListener("click", ()=>{ sfx.click(); api.advance(); });
-          readout.appendChild(nextBtn);
+          foot.appendChild(nextBtn);
         }
+        const shake = ()=>{ const el = POWER.el; el.classList.remove("shake"); void el.offsetWidth; el.classList.add("shake"); };
 
         const WAIT_MS = 10000;
-        const hint = lever.querySelector(".hint");
-        const HINT_TXT = hint.textContent;
         let cdTimer = null;
         function cooldown(){
           clearInterval(cdTimer);
           const tick = ()=>{
-            if(!lever.isConnected){ clearInterval(cdTimer); return; }
+            if(!crt.isConnected){ clearInterval(cdTimer); return; }
             const left = Math.ceil(((lv.waitUntil||0) - Date.now()) / 1000);
             if(left > 0){
-              lever.lock(true); lever.classList.add("cooling");
-              hint.textContent = `Recargando procesador · ${left} s`;
+              POWER.lock(true); POWER.cooling(left);
+              cd.hidden = false; cd.textContent = `RECARGANDO PROCESADOR ... ${left} S`;
               return;
             }
             clearInterval(cdTimer);
             lv.waitUntil = 0; save();
-            lever.classList.remove("cooling");
-            hint.textContent = HINT_TXT;
-            if(!lv.solved){
-              lever.lock(false);
-              type(readout.tape, "PANEL EN ESPERA · Procesador listo. Podés volver a intentar.");
-            }
+            POWER.cooling(0); cd.hidden = true;
+            if(!lv.solved){ POWER.lock(false); line("PROCESADOR LISTO . PUEDE VOLVER A INTENTAR", "dim"); }
           };
           tick();
           cdTimer = setInterval(tick, 250);
         }
 
         function check(){
+          light(null);
           const names = lv.lamps.map(ci => ci>=0 ? COLORS[ci].id : null);
           if(names.includes(null)){
-            readout.light("bad"); sfx.bad();
-            bank.classList.remove("shake"); void bank.offsetWidth; bank.classList.add("shake");
-            type(readout.tape, "ERROR · Hay lámparas apagadas. Encendé las cuatro antes de bajar la palanca.");
+            light("bad"); sfx.bad(); shake();
+            line("ERROR . HAY LAMPARAS APAGADAS", "err");
             return;
           }
           const mi = COMBOS.findIndex(cb => cb.every((n,i)=>n===names[i]));
-          const ok = mi >= 0;
-          if(ok){
+          if(mi >= 0){
             lv.solved = true; state.m = mi; save();
-            readout.light("ok"); sfx.ok();
-            lamps.querySelectorAll(".lamp").forEach((b,i)=>setTimeout(()=>b.parentElement.classList.add("flash"), i*120));
-            lever.lock(true);
-            type(readout.tape, "MÁQUINA ENCENDIDA · Procesador energizado. Módulo 2 listo para cargar.");
+            light("ok"); sfx.ok(); POWER.flash(); POWER.lock(true);
+            line("SECUENCIA ACEPTADA", "");
+            line("MAQUINA ENCENDIDA . PROCESADOR ENERGIZADO", "");
             showNext();
           }else{
-            readout.light("bad"); sfx.bad();
-            bank.classList.remove("shake"); void bank.offsetWidth; bank.classList.add("shake");
-            type(readout.tape, "ERROR · Secuencia rechazada. El procesador tarda 10 segundos en recargarse.");
+            light("bad"); sfx.bad(); shake();
+            line("ERROR . SECUENCIA RECHAZADA", "err");
             lv.waitUntil = Date.now() + WAIT_MS; save();
             cooldown();
           }
         }
+        POWER.onPull = check;
+        POWER.onLamp = ()=>light(null);
 
+        line("SISTEMA SIN ENERGIA", "err");
+        line("SECUENCIA DE ENCENDIDO REQUERIDA", "");
         if(lv.solved){
-          readout.light("ok"); lever.lock(true);
-          type(readout.tape, "MÁQUINA ENCENDIDA · Procesador energizado. Módulo 2 listo para cargar.");
+          light("ok"); POWER.lock(true);
+          line("SECUENCIA ACEPTADA", "");
+          line("MAQUINA ENCENDIDA . PROCESADOR ENERGIZADO", "");
           showNext();
-        }else if((lv.waitUntil||0) > Date.now()){
-          type(readout.tape, "ERROR · Secuencia rechazada. El procesador tarda 10 segundos en recargarse.");
-          cooldown();
         }else{
-          type(readout.tape, "PANEL EN ESPERA · Ajustá las cuatro lámparas y bajá la palanca.");
+          line("AJUSTE LAS CUATRO LAMPARAS Y BAJE LA PALANCA", "dim");
+          if((lv.waitUntil||0) > Date.now()){ line("ERROR . SECUENCIA RECHAZADA", "err"); cooldown(); }
+          else POWER.lock(false);
         }
       }
     },
@@ -2142,21 +2214,26 @@ html{box-sizing:border-box} body{margin:0} [hidden]{display:none!important} img{
   function render(){
     const stage = document.getElementById("stage");
     if(stopIntro){ stopIntro(); stopIntro = null; }
+    if(POWER.el.parentElement === stage) POWER.el.remove();
     stage.innerHTML = "";
+    POWER.onPull = null; POWER.onLamp = null; POWER.cooling(0);
     clearInterval(tapeTimer);
     if(!state.introDone){
       setDrums(0);
       stage.appendChild($("div","level-name","Transmisión entrante"));
       stopIntro = mountIntro(stage, ()=>{ state.introDone = true; save(); render(); });
+      POWER.refresh(); POWER.place();
       return;
     }
     const i = Math.min(state.level || 0, LEVELS.length-1);
     const L = LEVELS[i];
     setDrums(i+1);
     if(L.name) stage.appendChild($("div","level-name", L.name));
+    POWER.refresh();
     L.mount(stage, {
       advance(){ state.level = i+1; save(); render(); }
     });
+    POWER.place();
     addEnterButtons(stage);
   }
 
